@@ -11,3 +11,5 @@ pub struct Color {
     pub blue: u8,
     pub green: u8,
 }
+
+pub struct VarLenString(String);

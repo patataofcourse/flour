@@ -1,4 +1,4 @@
-use crate::{bytestream_addon::ByteStream, Color};
+use crate::{bytestream_addon::ByteStream, Color, VarLenString};
 use bytestream::{ByteOrder, StreamReader};
 use serde_derive::{Deserialize, Serialize};
 use std::{fs::File, io::Read, io::Result as IOResult};
@@ -135,12 +135,32 @@ impl BCCAD {
             sprites.push(Sprite { parts });
         }
 
+        let anim_count = u32::read_from(&mut f, ByteOrder::LittleEndian)?;
+        let mut animations = vec![];
+        for _ in 0..anim_count {
+            let name = VarLenString::read_from(&mut f, ByteOrder::LittleEndian)?
+                .0
+                .clone();
+            let interpolation = i32::read_from(&mut f, ByteOrder::LittleEndian)?;
+            let step_count = u32::read_from(&mut f, ByteOrder::LittleEndian)?;
+            let mut steps = vec![];
+            for _ in 0..step_count {
+                let sprite = u16::read_from(&mut f, ByteOrder::LittleEndian)?;
+                let duration = u16::read_from(&mut f, ByteOrder::LittleEndian)?;
+                let pos_x = i16::read_from(&mut f, ByteOrder::LittleEndian)?;
+                let pos_y = i16::read_from(&mut f, ByteOrder::LittleEndian)?;
+                let depth = f32::read_from(&mut f, ByteOrder::LittleEndian)?;
+                let scale_x = f32::read_from(&mut f, ByteOrder::LittleEndian)?;
+                let scale_y = f32::read_from(&mut f, ByteOrder::LittleEndian)?;
+            }
+        }
+
         Ok(Self {
             timestamp,
             texture_width,
             texture_height,
-            sprites: sprites,
-            animations: vec![],
+            sprites,
+            animations,
         })
     }
     pub fn from_json(filename: &str) -> Result<Self, serde_json::Error> {
