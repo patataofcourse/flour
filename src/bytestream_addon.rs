@@ -1,6 +1,7 @@
-use bytestream::ByteOrder;
+use crate::Color;
+use bytestream::*;
 use std::{
-    io::{Read, Result},
+    io::{Read, Result, Write},
     marker::Sized,
 };
 
@@ -18,5 +19,23 @@ impl ByteStream for f32 {
             ByteOrder::BigEndian => Ok(Self::from_be_bytes(bytes)),
             ByteOrder::LittleEndian => Ok(Self::from_le_bytes(bytes)),
         }
+    }
+}
+
+impl StreamReader for Color {
+    fn read_from<T: Read>(file: &mut T, order: ByteOrder) -> Result<Self> {
+        let red = u8::read_from(file, order)?;
+        let green = u8::read_from(file, order)?;
+        let blue = u8::read_from(file, order)?;
+        Ok(Self { red, green, blue })
+    }
+}
+
+impl StreamWriter for Color {
+    fn write_to<W: Write>(&self, file: &mut W, order: ByteOrder) -> Result<()> {
+        self.red.write_to(file, order)?;
+        self.green.write_to(file, order)?;
+        self.blue.write_to(file, order)?;
+        Ok(())
     }
 }

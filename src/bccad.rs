@@ -1,7 +1,7 @@
-use crate::bytestream_addon::ByteStream;
+use crate::{bytestream_addon::ByteStream, Color};
 use bytestream::{ByteOrder, StreamReader};
 use serde_derive::{Deserialize, Serialize};
-use std::{fs::File, io::Result as IOResult};
+use std::{fs::File, io::Read, io::Result as IOResult};
 
 #[derive(Serialize, Deserialize)]
 pub struct BCCAD {
@@ -25,8 +25,8 @@ pub struct SpritePart {
     pub scale_x: f32,
     pub scale_y: f32,
     pub rotation: f32,
-    pub flip_horizontal: bool,
-    pub flip_vertical: bool,
+    pub flip_x: bool,
+    pub flip_y: bool,
     pub multiply_color: Color,
     pub screen_color: Color,
     pub opacity: u8,
@@ -74,13 +74,6 @@ pub struct AnimationStep {
     pub opacity: u16,
 }
 
-#[derive(Serialize, Deserialize)]
-pub struct Color {
-    pub red: u8,
-    pub blue: u8,
-    pub green: u8,
-}
-
 impl BCCAD {
     pub fn from_bccad(filename: &str) -> IOResult<Self> {
         let mut f = File::open(filename)?;
@@ -104,6 +97,40 @@ impl BCCAD {
                 let pos_y = i16::read_from(&mut f, ByteOrder::LittleEndian)?;
                 let scale_x = f32::read_from(&mut f, ByteOrder::LittleEndian)?;
                 let scale_y = f32::read_from(&mut f, ByteOrder::LittleEndian)?;
+                let rotation = f32::read_from(&mut f, ByteOrder::LittleEndian)?;
+                let flip_x = bool::read_from(&mut f, ByteOrder::LittleEndian)?;
+                let flip_y = bool::read_from(&mut f, ByteOrder::LittleEndian)?;
+                let multiply_color = Color::read_from(&mut f, ByteOrder::LittleEndian)?;
+                let screen_color = Color::read_from(&mut f, ByteOrder::LittleEndian)?;
+                let opacity = u8::read_from(&mut f, ByteOrder::LittleEndian)?;
+                let mut unk1 = [0; 12];
+                f.read(&mut unk1)?;
+                let designation_id = u8::read_from(&mut f, ByteOrder::LittleEndian)?;
+                let unk2 = u8::read_from(&mut f, ByteOrder::LittleEndian)?;
+                let depth = StereoDepth {
+                    top_left: f32::read_from(&mut f, ByteOrder::LittleEndian)?,
+                    bottom_left: f32::read_from(&mut f, ByteOrder::LittleEndian)?,
+                    top_right: f32::read_from(&mut f, ByteOrder::LittleEndian)?,
+                    bottom_right: f32::read_from(&mut f, ByteOrder::LittleEndian)?,
+                };
+                u8::read_from(&mut f, ByteOrder::LittleEndian)?; // terminator
+                parts.push(SpritePart {
+                    texture_pos,
+                    pos_x,
+                    pos_y,
+                    scale_x,
+                    scale_y,
+                    rotation,
+                    flip_x,
+                    flip_y,
+                    multiply_color,
+                    screen_color,
+                    opacity,
+                    unk1,
+                    designation_id,
+                    unk2,
+                    depth,
+                })
             }
             sprites.push(Sprite { parts });
         }
@@ -115,6 +142,9 @@ impl BCCAD {
             sprites: vec![],
             animations: vec![],
         })
+    }
+    pub fn from_json(filename: &str) -> Result<Self, serde_json::Error> {
+        serde_json::from_str(filename)
     }
     pub fn to_json(&self) -> Result<String, serde_json::Error> {
         serde_json::to_string_pretty(self)
