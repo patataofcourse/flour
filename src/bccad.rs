@@ -1,3 +1,4 @@
+use crate::bytestream_addon::ByteStream;
 use bytestream::{ByteOrder, StreamReader};
 use serde_derive::{Deserialize, Serialize};
 use std::{fs::File, io::Result as IOResult};
@@ -101,8 +102,8 @@ impl BCCAD {
                 };
                 let pos_x = i16::read_from(&mut f, ByteOrder::LittleEndian)?;
                 let pos_y = i16::read_from(&mut f, ByteOrder::LittleEndian)?;
-                //let scale_x = f32::read_from(&mut f, ByteOrder::LittleEndian)?;
-                //let scale_y = f32::read_from(&mut f, ByteOrder::LittleEndian)?;
+                let scale_x = f32::read_from(&mut f, ByteOrder::LittleEndian)?;
+                let scale_y = f32::read_from(&mut f, ByteOrder::LittleEndian)?;
             }
             sprites.push(Sprite { parts });
         }

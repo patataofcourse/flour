@@ -1,2 +1,2 @@
 mod bccad;
-mod util;
+pub(crate) mod bytestream_addon;
