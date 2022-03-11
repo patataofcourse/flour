@@ -1,21 +1,23 @@
-use serde_derive::{Serialize, Deserialize};
+use bytestream::{ByteOrder, StreamReader};
+use serde_derive::{Deserialize, Serialize};
+use std::{fs::File, io::Result as IOResult};
 
 #[derive(Serialize, Deserialize)]
-struct BCCAD {
+pub struct BCCAD {
     pub timestamp: u32,
     pub texture_width: u16,
     pub texture_height: u16,
     pub sprites: Vec<Sprite>,
-    pub animations: Vec<Animation>
+    pub animations: Vec<Animation>,
 }
 
 #[derive(Serialize, Deserialize)]
-struct Sprite {
+pub struct Sprite {
     pub parts: Vec<SpritePart>,
 }
 
 #[derive(Serialize, Deserialize)]
-struct SpritePart {
+pub struct SpritePart {
     pub texture_pos: PosInTexture,
     pub pos_x: i16,
     pub pos_y: i16,
@@ -30,11 +32,11 @@ struct SpritePart {
     pub unk1: [u8; 12],
     pub designation_id: u8,
     pub unk2: u8,
-    pub depth: StereoDepth
+    pub depth: StereoDepth,
 }
 
 #[derive(Serialize, Deserialize)]
-struct PosInTexture {
+pub struct PosInTexture {
     pub x: u16,
     pub y: u16,
     pub width: u16,
@@ -42,7 +44,7 @@ struct PosInTexture {
 }
 
 #[derive(Serialize, Deserialize)]
-struct StereoDepth {
+pub struct StereoDepth {
     pub top_left: f32,
     pub bottom_left: f32,
     pub top_right: f32,
@@ -50,14 +52,14 @@ struct StereoDepth {
 }
 
 #[derive(Serialize, Deserialize)]
-struct Animation {
+pub struct Animation {
     pub name: String, //Stored weirdly - do that manualy
     pub interpolation: i32,
     pub steps: Vec<AnimationStep>,
 }
 
 #[derive(Serialize, Deserialize)]
-struct AnimationStep {
+pub struct AnimationStep {
     pub sprite: u16,
     pub duration: u16,
     pub pos_x: i16,
@@ -71,10 +73,49 @@ struct AnimationStep {
     pub opacity: u16,
 }
 
-
 #[derive(Serialize, Deserialize)]
-struct Color {
+pub struct Color {
     pub red: u8,
     pub blue: u8,
     pub green: u8,
+}
+
+impl BCCAD {
+    pub fn from_bccad(filename: &str) -> IOResult<Self> {
+        let mut f = File::open(filename)?;
+        let timestamp = u32::read_from(&mut f, ByteOrder::LittleEndian)?;
+        let texture_width = u16::read_from(&mut f, ByteOrder::LittleEndian)?;
+        let texture_height = u16::read_from(&mut f, ByteOrder::LittleEndian)?;
+
+        let sprite_count = u32::read_from(&mut f, ByteOrder::LittleEndian)?;
+        let mut sprites = vec![];
+        for _ in 0..sprite_count {
+            let parts_count = u32::read_from(&mut f, ByteOrder::LittleEndian)?;
+            let mut parts = vec![];
+            for _ in 0..parts_count {
+                let texture_pos = PosInTexture {
+                    x: u16::read_from(&mut f, ByteOrder::LittleEndian)?,
+                    y: u16::read_from(&mut f, ByteOrder::LittleEndian)?,
+                    width: u16::read_from(&mut f, ByteOrder::LittleEndian)?,
+                    height: u16::read_from(&mut f, ByteOrder::LittleEndian)?,
+                };
+                let pos_x = i16::read_from(&mut f, ByteOrder::LittleEndian)?;
+                let pos_y = i16::read_from(&mut f, ByteOrder::LittleEndian)?;
+                //let scale_x = f32::read_from(&mut f, ByteOrder::LittleEndian)?;
+                //let scale_y = f32::read_from(&mut f, ByteOrder::LittleEndian)?;
+            }
+            sprites.push(Sprite { parts });
+        }
+
+        Ok(Self {
+            timestamp,
+            texture_width,
+            texture_height,
+            sprites: vec![],
+            animations: vec![],
+        })
+    }
+    pub fn to_json(&self) -> Result<String, serde_json::Error> {
+        serde_json::to_string_pretty(self)
+    }
 }
