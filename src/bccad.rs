@@ -139,7 +139,7 @@ impl BCCAD {
             timestamp,
             texture_width,
             texture_height,
-            sprites: vec![],
+            sprites: sprites,
             animations: vec![],
         })
     }

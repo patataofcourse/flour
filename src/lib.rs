@@ -1,7 +1,9 @@
 use serde_derive::{Deserialize, Serialize};
 
-mod bccad;
+pub mod bccad;
 pub(crate) mod bytestream_addon;
+
+pub use bccad::BCCAD;
 
 #[derive(Serialize, Deserialize)]
 pub struct Color {
