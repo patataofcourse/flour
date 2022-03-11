@@ -1,2 +1,2 @@
 # flour
-Serializes and deserializes BCCAD files to JSON
+Serializes and deserializes BCCAD files to and from JSON
