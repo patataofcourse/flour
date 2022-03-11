@@ -53,7 +53,7 @@ impl StreamReader for VarLenString {
         }
         let string = match String::from_utf8(bytes) {
             Ok(c) => c,
-            Err(e) => {
+            Err(_) => {
                 eprintln!("Error reading string");
                 Err(Error::from(ErrorKind::Other))?
             }

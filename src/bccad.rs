@@ -1,7 +1,7 @@
 use crate::{bytestream_addon::ByteStream, Color, VarLenString};
 use bytestream::{ByteOrder, StreamReader};
 use serde_derive::{Deserialize, Serialize};
-use std::{fs::File, io::Read, io::Result as IOResult};
+use std::{io::Read, io::Result as IOResult, marker::Sized};
 
 #[derive(Serialize, Deserialize)]
 pub struct BCCAD {
@@ -75,45 +75,47 @@ pub struct AnimationStep {
 }
 
 impl BCCAD {
-    pub fn from_bccad(filename: &str) -> IOResult<Self> {
-        let mut f = File::open(filename)?;
-        let timestamp = u32::read_from(&mut f, ByteOrder::LittleEndian)?;
-        let texture_width = u16::read_from(&mut f, ByteOrder::LittleEndian)?;
-        let texture_height = u16::read_from(&mut f, ByteOrder::LittleEndian)?;
+    pub fn from_bccad<F: Read>(f: &mut F) -> IOResult<Self>
+    where
+        F: Sized,
+    {
+        let timestamp = u32::read_from(f, ByteOrder::LittleEndian)?;
+        let texture_width = u16::read_from(f, ByteOrder::LittleEndian)?;
+        let texture_height = u16::read_from(f, ByteOrder::LittleEndian)?;
 
-        let sprite_count = u32::read_from(&mut f, ByteOrder::LittleEndian)?;
+        let sprite_count = u32::read_from(f, ByteOrder::LittleEndian)?;
         let mut sprites = vec![];
         for _ in 0..sprite_count {
-            let parts_count = u32::read_from(&mut f, ByteOrder::LittleEndian)?;
+            let parts_count = u32::read_from(f, ByteOrder::LittleEndian)?;
             let mut parts = vec![];
             for _ in 0..parts_count {
                 let texture_pos = PosInTexture {
-                    x: u16::read_from(&mut f, ByteOrder::LittleEndian)?,
-                    y: u16::read_from(&mut f, ByteOrder::LittleEndian)?,
-                    width: u16::read_from(&mut f, ByteOrder::LittleEndian)?,
-                    height: u16::read_from(&mut f, ByteOrder::LittleEndian)?,
+                    x: u16::read_from(f, ByteOrder::LittleEndian)?,
+                    y: u16::read_from(f, ByteOrder::LittleEndian)?,
+                    width: u16::read_from(f, ByteOrder::LittleEndian)?,
+                    height: u16::read_from(f, ByteOrder::LittleEndian)?,
                 };
-                let pos_x = i16::read_from(&mut f, ByteOrder::LittleEndian)?;
-                let pos_y = i16::read_from(&mut f, ByteOrder::LittleEndian)?;
-                let scale_x = f32::read_from(&mut f, ByteOrder::LittleEndian)?;
-                let scale_y = f32::read_from(&mut f, ByteOrder::LittleEndian)?;
-                let rotation = f32::read_from(&mut f, ByteOrder::LittleEndian)?;
-                let flip_x = bool::read_from(&mut f, ByteOrder::LittleEndian)?;
-                let flip_y = bool::read_from(&mut f, ByteOrder::LittleEndian)?;
-                let multiply_color = Color::read_from(&mut f, ByteOrder::LittleEndian)?;
-                let screen_color = Color::read_from(&mut f, ByteOrder::LittleEndian)?;
-                let opacity = u8::read_from(&mut f, ByteOrder::LittleEndian)?;
+                let pos_x = i16::read_from(f, ByteOrder::LittleEndian)?;
+                let pos_y = i16::read_from(f, ByteOrder::LittleEndian)?;
+                let scale_x = f32::read_from(f, ByteOrder::LittleEndian)?;
+                let scale_y = f32::read_from(f, ByteOrder::LittleEndian)?;
+                let rotation = f32::read_from(f, ByteOrder::LittleEndian)?;
+                let flip_x = bool::read_from(f, ByteOrder::LittleEndian)?;
+                let flip_y = bool::read_from(f, ByteOrder::LittleEndian)?;
+                let multiply_color = Color::read_from(f, ByteOrder::LittleEndian)?;
+                let screen_color = Color::read_from(f, ByteOrder::LittleEndian)?;
+                let opacity = u8::read_from(f, ByteOrder::LittleEndian)?;
                 let mut unk1 = [0; 12];
                 f.read(&mut unk1)?;
-                let designation_id = u8::read_from(&mut f, ByteOrder::LittleEndian)?;
-                let unk2 = u8::read_from(&mut f, ByteOrder::LittleEndian)?;
+                let designation_id = u8::read_from(f, ByteOrder::LittleEndian)?;
+                let unk2 = u8::read_from(f, ByteOrder::LittleEndian)?;
                 let depth = StereoDepth {
-                    top_left: f32::read_from(&mut f, ByteOrder::LittleEndian)?,
-                    bottom_left: f32::read_from(&mut f, ByteOrder::LittleEndian)?,
-                    top_right: f32::read_from(&mut f, ByteOrder::LittleEndian)?,
-                    bottom_right: f32::read_from(&mut f, ByteOrder::LittleEndian)?,
+                    top_left: f32::read_from(f, ByteOrder::LittleEndian)?,
+                    bottom_left: f32::read_from(f, ByteOrder::LittleEndian)?,
+                    top_right: f32::read_from(f, ByteOrder::LittleEndian)?,
+                    bottom_right: f32::read_from(f, ByteOrder::LittleEndian)?,
                 };
-                u8::read_from(&mut f, ByteOrder::LittleEndian)?; // terminator
+                u8::read_from(f, ByteOrder::LittleEndian)?; // terminator
                 parts.push(SpritePart {
                     texture_pos,
                     pos_x,
@@ -135,24 +137,47 @@ impl BCCAD {
             sprites.push(Sprite { parts });
         }
 
-        let anim_count = u32::read_from(&mut f, ByteOrder::LittleEndian)?;
+        let anim_count = u32::read_from(f, ByteOrder::LittleEndian)?;
         let mut animations = vec![];
         for _ in 0..anim_count {
-            let name = VarLenString::read_from(&mut f, ByteOrder::LittleEndian)?
+            let name = VarLenString::read_from(f, ByteOrder::LittleEndian)?
                 .0
                 .clone();
-            let interpolation = i32::read_from(&mut f, ByteOrder::LittleEndian)?;
-            let step_count = u32::read_from(&mut f, ByteOrder::LittleEndian)?;
+            let interpolation = i32::read_from(f, ByteOrder::LittleEndian)?;
+            let step_count = u32::read_from(f, ByteOrder::LittleEndian)?;
             let mut steps = vec![];
             for _ in 0..step_count {
-                let sprite = u16::read_from(&mut f, ByteOrder::LittleEndian)?;
-                let duration = u16::read_from(&mut f, ByteOrder::LittleEndian)?;
-                let pos_x = i16::read_from(&mut f, ByteOrder::LittleEndian)?;
-                let pos_y = i16::read_from(&mut f, ByteOrder::LittleEndian)?;
-                let depth = f32::read_from(&mut f, ByteOrder::LittleEndian)?;
-                let scale_x = f32::read_from(&mut f, ByteOrder::LittleEndian)?;
-                let scale_y = f32::read_from(&mut f, ByteOrder::LittleEndian)?;
+                let sprite = u16::read_from(f, ByteOrder::LittleEndian)?;
+                let duration = u16::read_from(f, ByteOrder::LittleEndian)?;
+                let pos_x = i16::read_from(f, ByteOrder::LittleEndian)?;
+                let pos_y = i16::read_from(f, ByteOrder::LittleEndian)?;
+                let depth = f32::read_from(f, ByteOrder::LittleEndian)?;
+                let scale_x = f32::read_from(f, ByteOrder::LittleEndian)?;
+                let scale_y = f32::read_from(f, ByteOrder::LittleEndian)?;
+                let rotation = f32::read_from(f, ByteOrder::LittleEndian)?;
+                let multiply_color = Color::read_from(f, ByteOrder::LittleEndian)?;
+                let mut unk = [0; 3];
+                f.read(&mut unk)?;
+                let opacity = u16::read_from(f, ByteOrder::LittleEndian)?;
+                steps.push(AnimationStep {
+                    sprite,
+                    duration,
+                    pos_x,
+                    pos_y,
+                    depth,
+                    scale_x,
+                    scale_y,
+                    rotation,
+                    multiply_color,
+                    unk,
+                    opacity,
+                })
             }
+            animations.push(Animation {
+                name,
+                interpolation,
+                steps,
+            })
         }
 
         Ok(Self {
@@ -163,8 +188,8 @@ impl BCCAD {
             animations,
         })
     }
-    pub fn from_json(filename: &str) -> Result<Self, serde_json::Error> {
-        serde_json::from_str(filename)
+    pub fn from_json(json: &str) -> Result<Self, serde_json::Error> {
+        serde_json::from_str(json)
     }
     pub fn to_json(&self) -> Result<String, serde_json::Error> {
         serde_json::to_string_pretty(self)
