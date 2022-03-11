@@ -1,7 +1,10 @@
 use crate::{bytestream_addon::ByteStream, Color, VarLenString};
 use bytestream::{ByteOrder, StreamReader};
 use serde_derive::{Deserialize, Serialize};
-use std::{io::Read, io::Result as IOResult, marker::Sized};
+use std::{
+    io::{Read, Result as IOResult, Write},
+    marker::Sized,
+};
 
 #[derive(Serialize, Deserialize)]
 pub struct BCCAD {
@@ -188,6 +191,10 @@ impl BCCAD {
             animations,
         })
     }
+    pub fn to_bccad<F: Write>(&self, f: &mut F) -> IOResult<()> {
+        Ok(())
+    }
+
     pub fn from_json(json: &str) -> Result<Self, serde_json::Error> {
         serde_json::from_str(json)
     }
