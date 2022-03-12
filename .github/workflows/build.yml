@@ -23,7 +23,7 @@ jobs:
     - name: test2
       run: ls target
     - name: test3
-      run: echo $cwd , ${{runner.workspace}}
+      run: echo $PWD , ${{runner.workspace}}
     - uses: actions/upload-artifact@v1
       with:
         name: flour
