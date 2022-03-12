@@ -1,6 +1,10 @@
 use clap::{Parser, Subcommand};
 use flour::BCCAD;
-use std::{fs::File, io::Result, path::PathBuf};
+use std::{
+    fs::File,
+    io::{Result, Write},
+    path::PathBuf,
+};
 
 #[derive(Parser)]
 #[clap(
@@ -35,8 +39,34 @@ enum Command {
     },
 }
 
-fn main() {
+fn main() -> Result<()> {
     let cli = Cli::parse();
+
+    match cli.command {
+        Some(Command::Serialize { bccad, json }) => {
+            let json = match json {
+                Some(c) => c,
+                None => {
+                    let mut p = bccad.clone();
+                    p.set_extension(".json");
+                    p
+                }
+            };
+            let mut in_file = File::open(&bccad)?;
+            let mut out_file = File::create(&json)?;
+            let bccad_ = BCCAD::from_bccad(&mut in_file)?;
+            let json_ = bccad_.to_json()?;
+            writeln!(out_file, "{}", json_)?;
+            println!(
+                "Serialized {:?} to {:?}",
+                bccad.into_os_string(),
+                json.into_os_string()
+            );
+        }
+        Some(Command::Deserialize { json, bccad }) => {}
+        None => {}
+    }
+    Ok(())
 }
 
 fn _main() -> Result<()> {
