@@ -23,7 +23,7 @@ jobs:
     - uses: actions/upload-artifact@v1
       with:
         name: flour-linux
-        path: ${{runner.workspace}}/flour/target/debug/flour
+        path: ${{runner.workspace}}/flour/target/release/flour
   windows:
     name: Windows
     runs-on: windows-latest
@@ -37,7 +37,7 @@ jobs:
     - uses: actions/upload-artifact@v1
       with:
         name: flour-windows
-        path: ${{runner.workspace}}/flour/target/debug/flour.exe
+        path: ${{runner.workspace}}/flour/target/release/flour.exe
   macos:
     name: Mac
     runs-on: macos-latest
@@ -51,4 +51,4 @@ jobs:
     - uses: actions/upload-artifact@v1
       with:
         name: flour-mac
-        path: ${{runner.workspace}}/flour/target/debug/flour
+        path: ${{runner.workspace}}/flour/target/release/flour
