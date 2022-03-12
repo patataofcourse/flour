@@ -252,6 +252,7 @@ impl BCCAD {
                 step.opacity.write_to(f, ByteOrder::LittleEndian)?;
             }
         }
+        (0 as u8).write_to(f, ByteOrder::LittleEndian)?; // terminator
 
         Ok(())
     }
