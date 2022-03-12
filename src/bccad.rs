@@ -233,7 +233,25 @@ impl BCCAD {
             }
         }
 
-        //TODO: animations
+        (self.animations.len() as u32).write_to(f, ByteOrder::LittleEndian)?;
+        for anim in &self.animations {
+            VarLenString(anim.name.clone()).write_to(f, ByteOrder::LittleEndian)?;
+            anim.interpolation.write_to(f, ByteOrder::LittleEndian)?;
+            (anim.steps.len() as u32).write_to(f, ByteOrder::LittleEndian)?;
+            for step in &anim.steps {
+                step.sprite.write_to(f, ByteOrder::LittleEndian)?;
+                step.duration.write_to(f, ByteOrder::LittleEndian)?;
+                step.pos_x.write_to(f, ByteOrder::LittleEndian)?;
+                step.pos_y.write_to(f, ByteOrder::LittleEndian)?;
+                step.depth.write_to(f, ByteOrder::LittleEndian)?;
+                step.scale_x.write_to(f, ByteOrder::LittleEndian)?;
+                step.scale_y.write_to(f, ByteOrder::LittleEndian)?;
+                step.rotation.write_to(f, ByteOrder::LittleEndian)?;
+                step.multiply_color.write_to(f, ByteOrder::LittleEndian)?;
+                f.write(&step.unk)?;
+                step.opacity.write_to(f, ByteOrder::LittleEndian)?;
+            }
+        }
 
         Ok(())
     }

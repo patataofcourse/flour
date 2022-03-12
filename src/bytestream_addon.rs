@@ -72,3 +72,18 @@ impl StreamReader for VarLenString {
         Ok(Self(string))
     }
 }
+
+impl StreamWriter for VarLenString {
+    fn write_to<T: Write>(&self, file: &mut T, order: ByteOrder) -> Result<()> {
+        let string = &self.0;
+        let size = string.len() as u8;
+        let bytes = string.as_bytes();
+        let padding_size = 4 - ((size + 1) % 4);
+        size.write_to(file, order)?;
+        file.write(&bytes)?;
+        for _ in 0..padding_size {
+            (0 as u8).write_to(file, order)?;
+        }
+        Ok(())
+    }
+}
