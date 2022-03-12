@@ -14,7 +14,7 @@ use std::{
 )]
 struct Cli {
     #[clap(subcommand)]
-    command: Option<Command>,
+    command: Command,
 }
 
 #[derive(Subcommand)]
@@ -42,7 +42,7 @@ enum Command {
 fn main() -> Result<()> {
     let cli = Cli::parse();
     match cli.command {
-        Some(Command::Serialize { bccad, json }) => {
+        Command::Serialize { bccad, json } => {
             let json = match json {
                 Some(c) => c,
                 None => {
@@ -62,7 +62,7 @@ fn main() -> Result<()> {
                 json.into_os_string()
             );
         }
-        Some(Command::Deserialize { json, bccad }) => {
+        Command::Deserialize { json, bccad } => {
             let bccad = match bccad {
                 Some(c) => c,
                 None => {
@@ -83,7 +83,6 @@ fn main() -> Result<()> {
                 bccad.into_os_string()
             );
         }
-        None => {}
     }
     Ok(())
 }
