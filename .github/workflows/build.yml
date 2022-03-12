@@ -51,4 +51,4 @@ jobs:
     - uses: actions/upload-artifact@v1
       with:
         name: flour-mac
-        path: ${{runner.workspace}}/flour/target/debug/flour.dmg
+        path: ${{runner.workspace}}/flour/target/debug/flour.app
