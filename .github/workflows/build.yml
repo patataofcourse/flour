@@ -24,9 +24,10 @@ jobs:
       with:
         name: flour
         path: ${{runner.workspace}}/target/debug
+windows:
     name: Windows
     runs-on: windows-latest
-
+    
     steps:
     - uses: actions/checkout@v2
     - name: Build
