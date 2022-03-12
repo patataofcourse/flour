@@ -22,8 +22,8 @@ jobs:
       run: cargo test --verbose
     - uses: actions/upload-artifact@v1
       with:
-        name: flour
-        path: ${{runner.workspace}}/flour/target/debug
+        name: flour-linux
+        path: ${{runner.workspace}}/flour/target/debug/flour
   windows:
     name: Windows
     runs-on: windows-latest
@@ -36,8 +36,8 @@ jobs:
       run: cargo test --verbose
     - uses: actions/upload-artifact@v1
       with:
-        name: flour.exe
-        path: ${{runner.workspace}}/flour/target/debug
+        name: flour-windows
+        path: ${{runner.workspace}}/flour/target/debug/flour.exe
   macos:
     name: Mac
     runs-on: macos-latest
@@ -50,5 +50,5 @@ jobs:
       run: cargo test --verbose
     - uses: actions/upload-artifact@v1
       with:
-        name: flour.dmg
-        path: ${{runner.workspace}}/flour/target/debug
+        name: flour-mac
+        path: ${{runner.workspace}}/flour/target/debug/flour.dmg
