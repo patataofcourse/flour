@@ -1,0 +1,42 @@
+name: Debug builds
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  linux:
+    name: Linux
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Build
+      run: cargo build --verbose
+    - name: Run tests
+      run: cargo test --verbose
+  windows:
+    name: Windows
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Build
+      run: cargo build --verbose
+    - name: Run tests
+      run: cargo test --verbose
+  macos:
+    name: Mac
+    runs-on: macos-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Build
+      run: cargo build --verbose
+    - name: Run tests
+      run: cargo test --verbose
