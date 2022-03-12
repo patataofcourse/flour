@@ -1,5 +1,5 @@
 use crate::{bytestream_addon::ByteStream, Color, VarLenString};
-use bytestream::{ByteOrder, StreamReader};
+use bytestream::{ByteOrder, StreamReader, StreamWriter};
 use serde_derive::{Deserialize, Serialize};
 use std::{
     io::{Read, Result as IOResult, Write},
@@ -192,6 +192,49 @@ impl BCCAD {
         })
     }
     pub fn to_bccad<F: Write>(&self, f: &mut F) -> IOResult<()> {
+        self.timestamp.write_to(f, ByteOrder::LittleEndian)?;
+        self.texture_width.write_to(f, ByteOrder::LittleEndian)?;
+        self.texture_height.write_to(f, ByteOrder::LittleEndian)?;
+
+        (self.sprites.len() as u32).write_to(f, ByteOrder::LittleEndian)?;
+        for sprite in &self.sprites {
+            (sprite.parts.len() as u32).write_to(f, ByteOrder::LittleEndian)?;
+            for part in &sprite.parts {
+                part.texture_pos.x.write_to(f, ByteOrder::LittleEndian)?;
+                part.texture_pos.y.write_to(f, ByteOrder::LittleEndian)?;
+                part.texture_pos
+                    .width
+                    .write_to(f, ByteOrder::LittleEndian)?;
+                part.texture_pos
+                    .height
+                    .write_to(f, ByteOrder::LittleEndian)?;
+                part.pos_x.write_to(f, ByteOrder::LittleEndian)?;
+                part.pos_y.write_to(f, ByteOrder::LittleEndian)?;
+                part.scale_x.write_to(f, ByteOrder::LittleEndian)?;
+                part.scale_y.write_to(f, ByteOrder::LittleEndian)?;
+                part.rotation.write_to(f, ByteOrder::LittleEndian)?;
+                part.flip_x.write_to(f, ByteOrder::LittleEndian)?;
+                part.flip_y.write_to(f, ByteOrder::LittleEndian)?;
+                part.multiply_color.write_to(f, ByteOrder::LittleEndian)?;
+                part.screen_color.write_to(f, ByteOrder::LittleEndian)?;
+                part.opacity.write_to(f, ByteOrder::LittleEndian)?;
+                f.write(&part.unk1)?;
+                part.designation_id.write_to(f, ByteOrder::LittleEndian)?;
+                part.unk2.write_to(f, ByteOrder::LittleEndian)?;
+                part.depth.top_left.write_to(f, ByteOrder::LittleEndian)?;
+                part.depth
+                    .bottom_left
+                    .write_to(f, ByteOrder::LittleEndian)?;
+                part.depth.top_right.write_to(f, ByteOrder::LittleEndian)?;
+                part.depth
+                    .bottom_right
+                    .write_to(f, ByteOrder::LittleEndian)?;
+                (0 as u8).write_to(f, ByteOrder::LittleEndian)?; // terminator
+            }
+        }
+
+        //TODO: animations
+
         Ok(())
     }
 

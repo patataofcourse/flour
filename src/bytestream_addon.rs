@@ -9,6 +9,9 @@ pub trait ByteStream {
     fn read_from(file: &mut dyn Read, order: ByteOrder) -> Result<Self>
     where
         Self: Sized;
+    fn write_to(&self, file: &mut dyn Write, order: ByteOrder) -> Result<()>
+    where
+        Self: Sized;
 }
 
 impl ByteStream for f32 {
@@ -19,6 +22,14 @@ impl ByteStream for f32 {
             ByteOrder::BigEndian => Ok(Self::from_be_bytes(bytes)),
             ByteOrder::LittleEndian => Ok(Self::from_le_bytes(bytes)),
         }
+    }
+    fn write_to(&self, file: &mut dyn Write, order: ByteOrder) -> Result<()> {
+        let bytes = match order {
+            ByteOrder::BigEndian => self.to_be_bytes(),
+            ByteOrder::LittleEndian => self.to_le_bytes(),
+        };
+        file.write(&bytes)?;
+        Ok(())
     }
 }
 

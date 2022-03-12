@@ -7,7 +7,12 @@ fn main() {
         Ok(c) => match c.to_json() {
             Ok(d) => {
                 let mut f = File::create("agb_tap.bccad").unwrap();
-                BCCAD::from_json(&d).unwrap().to_bccad(&mut f);
+                match BCCAD::from_json(&d).unwrap().to_bccad(&mut f) {
+                    Ok(()) => {
+                        println!("All done!")
+                    }
+                    Err(e) => eprintln!("Error in exporting BCCAD: {}", e),
+                };
             }
             Err(e) => eprintln!("Error in JSONing BCCAD: {}", e),
         },
