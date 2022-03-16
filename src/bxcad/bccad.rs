@@ -57,7 +57,7 @@ pub struct StereoDepth {
 
 #[derive(Serialize, Deserialize)]
 pub struct Animation {
-    pub name: String, //Stored weirdly - do that manualy
+    pub name: String,
     pub interpolation: i32,
     pub steps: Vec<AnimationStep>,
 }
