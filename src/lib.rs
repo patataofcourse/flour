@@ -3,7 +3,7 @@ use serde_derive::{Deserialize, Serialize};
 pub mod bxcad;
 pub(crate) mod bytestream_addon;
 
-pub use bxcad::{bccad::BCCAD, brcad::BRCAD};
+pub use bxcad::{bccad::BCCAD, brcad::BRCAD, BXCAD};
 
 #[derive(Serialize, Deserialize)]
 pub struct Color {

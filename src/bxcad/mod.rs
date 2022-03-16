@@ -16,3 +16,19 @@ pub trait BXCAD<'a>: Serialize + Deserialize<'a> {
         Ok(timestamp == Self::TIMESTAMP)
     }
 }
+
+pub enum BXCADType {
+    BRCAD,
+    BCCAD,
+    None,
+}
+
+pub fn get_bxcad_type<'a, F: Read + Seek>(f: &mut F) -> IOResult<BXCADType> {
+    if bccad::BCCAD::is_format(f)? {
+        Ok(BXCADType::BCCAD)
+    // } else if brcad::BRCAD::is_format(f)? {
+    //     Ok(BXCADType::BRCAD)
+    } else {
+        Ok(BXCADType::None)
+    }
+}

@@ -86,12 +86,3 @@ fn main() -> Result<()> {
     }
     Ok(())
 }
-
-fn _main() -> Result<()> {
-    let mut f = File::open("../bread/build/libs/agb_tap.bccad")?;
-    let bccad = BCCAD::from_bccad(&mut f)?;
-    let bccad_json = bccad.to_json()?;
-    drop(f);
-    let mut f = File::create("agb_tap.bccad")?;
-    BCCAD::from_json(&bccad_json)?.to_bccad(&mut f)
-}

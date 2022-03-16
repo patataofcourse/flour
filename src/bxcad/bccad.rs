@@ -1,10 +1,7 @@
-use crate::{bytestream_addon::ByteStream, Color, VarLenString};
+use crate::{bxcad::BXCAD, bytestream_addon::ByteStream, Color, VarLenString};
 use bytestream::{ByteOrder, StreamReader, StreamWriter};
 use serde_derive::{Deserialize, Serialize};
-use std::{
-    io::{Read, Result as IOResult, Write},
-    marker::Sized,
-};
+use std::io::{Read, Result as IOResult, Seek, Write};
 
 #[derive(Serialize, Deserialize)]
 pub struct BCCAD {
@@ -77,11 +74,10 @@ pub struct AnimationStep {
     pub opacity: u16,
 }
 
-impl BCCAD {
-    pub fn from_bccad<F: Read>(f: &mut F) -> IOResult<Self>
-    where
-        F: Sized,
-    {
+impl BXCAD<'_> for BCCAD {
+    const BYTE_ORDER: ByteOrder = ByteOrder::LittleEndian;
+    const TIMESTAMP: u32 = 20131007;
+    fn from_binary<F: Read>(f: &mut F) -> IOResult<Self> {
         let timestamp = u32::read_from(f, ByteOrder::LittleEndian)?;
         let texture_width = u16::read_from(f, ByteOrder::LittleEndian)?;
         let texture_height = u16::read_from(f, ByteOrder::LittleEndian)?;
@@ -191,7 +187,7 @@ impl BCCAD {
             animations,
         })
     }
-    pub fn to_bccad<F: Write>(&self, f: &mut F) -> IOResult<()> {
+    fn to_binary<F: Write>(&self, f: &mut F) -> IOResult<()> {
         self.timestamp.write_to(f, ByteOrder::LittleEndian)?;
         self.texture_width.write_to(f, ByteOrder::LittleEndian)?;
         self.texture_height.write_to(f, ByteOrder::LittleEndian)?;
@@ -256,10 +252,21 @@ impl BCCAD {
 
         Ok(())
     }
-
+}
+impl BCCAD {
+    #[deprecated]
+    pub fn from_bccad<F: Read + Seek>(f: &mut F) -> IOResult<Self> {
+        Self::from_binary(f)
+    }
+    #[deprecated]
+    pub fn to_bccad<F: Write>(&self, f: &mut F) -> IOResult<()> {
+        self.to_binary(f)
+    }
+    #[deprecated]
     pub fn from_json(json: &str) -> Result<Self, serde_json::Error> {
         serde_json::from_str(json)
     }
+    #[deprecated]
     pub fn to_json(&self) -> Result<String, serde_json::Error> {
         serde_json::to_string_pretty(self)
     }
