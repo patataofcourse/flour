@@ -1,4 +1,8 @@
-use crate::{bxcad::BXCAD, bytestream_addon::ByteStream, Color, VarLenString};
+use crate::{
+    bxcad::{PosInTexture, BXCAD},
+    bytestream_addon::ByteStream,
+    Color, VarLenString,
+};
 use bytestream::{ByteOrder, StreamReader, StreamWriter};
 use serde_derive::{Deserialize, Serialize};
 use std::io::{Read, Result as IOResult, Seek, Write};
@@ -37,14 +41,6 @@ pub struct SpritePart {
 }
 
 #[derive(Serialize, Deserialize)]
-pub struct PosInTexture {
-    pub x: u16,
-    pub y: u16,
-    pub width: u16,
-    pub height: u16,
-}
-
-#[derive(Serialize, Deserialize)]
 pub struct StereoDepth {
     pub top_left: f32,
     pub bottom_left: f32,
@@ -78,43 +74,43 @@ impl BXCAD<'_> for BCCAD {
     const BYTE_ORDER: ByteOrder = ByteOrder::LittleEndian;
     const TIMESTAMP: u32 = 20131007;
     fn from_binary<F: Read>(f: &mut F) -> IOResult<Self> {
-        let timestamp = u32::read_from(f, ByteOrder::LittleEndian)?;
-        let texture_width = u16::read_from(f, ByteOrder::LittleEndian)?;
-        let texture_height = u16::read_from(f, ByteOrder::LittleEndian)?;
+        let timestamp = u32::read_from(f, Self::BYTE_ORDER)?;
+        let texture_width = u16::read_from(f, Self::BYTE_ORDER)?;
+        let texture_height = u16::read_from(f, Self::BYTE_ORDER)?;
 
-        let sprite_count = u32::read_from(f, ByteOrder::LittleEndian)?;
+        let sprite_count = u32::read_from(f, Self::BYTE_ORDER)?;
         let mut sprites = vec![];
         for _ in 0..sprite_count {
-            let parts_count = u32::read_from(f, ByteOrder::LittleEndian)?;
+            let parts_count = u32::read_from(f, Self::BYTE_ORDER)?;
             let mut parts = vec![];
             for _ in 0..parts_count {
                 let texture_pos = PosInTexture {
-                    x: u16::read_from(f, ByteOrder::LittleEndian)?,
-                    y: u16::read_from(f, ByteOrder::LittleEndian)?,
-                    width: u16::read_from(f, ByteOrder::LittleEndian)?,
-                    height: u16::read_from(f, ByteOrder::LittleEndian)?,
+                    x: u16::read_from(f, Self::BYTE_ORDER)?,
+                    y: u16::read_from(f, Self::BYTE_ORDER)?,
+                    width: u16::read_from(f, Self::BYTE_ORDER)?,
+                    height: u16::read_from(f, Self::BYTE_ORDER)?,
                 };
-                let pos_x = i16::read_from(f, ByteOrder::LittleEndian)?;
-                let pos_y = i16::read_from(f, ByteOrder::LittleEndian)?;
-                let scale_x = f32::read_from(f, ByteOrder::LittleEndian)?;
-                let scale_y = f32::read_from(f, ByteOrder::LittleEndian)?;
-                let rotation = f32::read_from(f, ByteOrder::LittleEndian)?;
-                let flip_x = bool::read_from(f, ByteOrder::LittleEndian)?;
-                let flip_y = bool::read_from(f, ByteOrder::LittleEndian)?;
-                let multiply_color = Color::read_from(f, ByteOrder::LittleEndian)?;
-                let screen_color = Color::read_from(f, ByteOrder::LittleEndian)?;
-                let opacity = u8::read_from(f, ByteOrder::LittleEndian)?;
+                let pos_x = i16::read_from(f, Self::BYTE_ORDER)?;
+                let pos_y = i16::read_from(f, Self::BYTE_ORDER)?;
+                let scale_x = f32::read_from(f, Self::BYTE_ORDER)?;
+                let scale_y = f32::read_from(f, Self::BYTE_ORDER)?;
+                let rotation = f32::read_from(f, Self::BYTE_ORDER)?;
+                let flip_x = bool::read_from(f, Self::BYTE_ORDER)?;
+                let flip_y = bool::read_from(f, Self::BYTE_ORDER)?;
+                let multiply_color = Color::read_from(f, Self::BYTE_ORDER)?;
+                let screen_color = Color::read_from(f, Self::BYTE_ORDER)?;
+                let opacity = u8::read_from(f, Self::BYTE_ORDER)?;
                 let mut unk1 = [0; 12];
                 f.read(&mut unk1)?;
-                let designation_id = u8::read_from(f, ByteOrder::LittleEndian)?;
-                let unk2 = u8::read_from(f, ByteOrder::LittleEndian)?;
+                let designation_id = u8::read_from(f, Self::BYTE_ORDER)?;
+                let unk2 = u8::read_from(f, Self::BYTE_ORDER)?;
                 let depth = StereoDepth {
-                    top_left: f32::read_from(f, ByteOrder::LittleEndian)?,
-                    bottom_left: f32::read_from(f, ByteOrder::LittleEndian)?,
-                    top_right: f32::read_from(f, ByteOrder::LittleEndian)?,
-                    bottom_right: f32::read_from(f, ByteOrder::LittleEndian)?,
+                    top_left: f32::read_from(f, Self::BYTE_ORDER)?,
+                    bottom_left: f32::read_from(f, Self::BYTE_ORDER)?,
+                    top_right: f32::read_from(f, Self::BYTE_ORDER)?,
+                    bottom_right: f32::read_from(f, Self::BYTE_ORDER)?,
                 };
-                u8::read_from(f, ByteOrder::LittleEndian)?; // terminator
+                u8::read_from(f, Self::BYTE_ORDER)?; // terminator
                 parts.push(SpritePart {
                     texture_pos,
                     pos_x,
@@ -136,28 +132,26 @@ impl BXCAD<'_> for BCCAD {
             sprites.push(Sprite { parts });
         }
 
-        let anim_count = u32::read_from(f, ByteOrder::LittleEndian)?;
+        let anim_count = u32::read_from(f, Self::BYTE_ORDER)?;
         let mut animations = vec![];
         for _ in 0..anim_count {
-            let name = VarLenString::read_from(f, ByteOrder::LittleEndian)?
-                .0
-                .clone();
-            let interpolation = i32::read_from(f, ByteOrder::LittleEndian)?;
-            let step_count = u32::read_from(f, ByteOrder::LittleEndian)?;
+            let name = VarLenString::read_from(f, Self::BYTE_ORDER)?.0.clone();
+            let interpolation = i32::read_from(f, Self::BYTE_ORDER)?;
+            let step_count = u32::read_from(f, Self::BYTE_ORDER)?;
             let mut steps = vec![];
             for _ in 0..step_count {
-                let sprite = u16::read_from(f, ByteOrder::LittleEndian)?;
-                let duration = u16::read_from(f, ByteOrder::LittleEndian)?;
-                let pos_x = i16::read_from(f, ByteOrder::LittleEndian)?;
-                let pos_y = i16::read_from(f, ByteOrder::LittleEndian)?;
-                let depth = f32::read_from(f, ByteOrder::LittleEndian)?;
-                let scale_x = f32::read_from(f, ByteOrder::LittleEndian)?;
-                let scale_y = f32::read_from(f, ByteOrder::LittleEndian)?;
-                let rotation = f32::read_from(f, ByteOrder::LittleEndian)?;
-                let multiply_color = Color::read_from(f, ByteOrder::LittleEndian)?;
+                let sprite = u16::read_from(f, Self::BYTE_ORDER)?;
+                let duration = u16::read_from(f, Self::BYTE_ORDER)?;
+                let pos_x = i16::read_from(f, Self::BYTE_ORDER)?;
+                let pos_y = i16::read_from(f, Self::BYTE_ORDER)?;
+                let depth = f32::read_from(f, Self::BYTE_ORDER)?;
+                let scale_x = f32::read_from(f, Self::BYTE_ORDER)?;
+                let scale_y = f32::read_from(f, Self::BYTE_ORDER)?;
+                let rotation = f32::read_from(f, Self::BYTE_ORDER)?;
+                let multiply_color = Color::read_from(f, Self::BYTE_ORDER)?;
                 let mut unk = [0; 3];
                 f.read(&mut unk)?;
-                let opacity = u16::read_from(f, ByteOrder::LittleEndian)?;
+                let opacity = u16::read_from(f, Self::BYTE_ORDER)?;
                 steps.push(AnimationStep {
                     sprite,
                     duration,
@@ -188,67 +182,59 @@ impl BXCAD<'_> for BCCAD {
         })
     }
     fn to_binary<F: Write>(&self, f: &mut F) -> IOResult<()> {
-        self.timestamp.write_to(f, ByteOrder::LittleEndian)?;
-        self.texture_width.write_to(f, ByteOrder::LittleEndian)?;
-        self.texture_height.write_to(f, ByteOrder::LittleEndian)?;
+        self.timestamp.write_to(f, Self::BYTE_ORDER)?;
+        self.texture_width.write_to(f, Self::BYTE_ORDER)?;
+        self.texture_height.write_to(f, Self::BYTE_ORDER)?;
 
-        (self.sprites.len() as u32).write_to(f, ByteOrder::LittleEndian)?;
+        (self.sprites.len() as u32).write_to(f, Self::BYTE_ORDER)?;
         for sprite in &self.sprites {
-            (sprite.parts.len() as u32).write_to(f, ByteOrder::LittleEndian)?;
+            (sprite.parts.len() as u32).write_to(f, Self::BYTE_ORDER)?;
             for part in &sprite.parts {
-                part.texture_pos.x.write_to(f, ByteOrder::LittleEndian)?;
-                part.texture_pos.y.write_to(f, ByteOrder::LittleEndian)?;
-                part.texture_pos
-                    .width
-                    .write_to(f, ByteOrder::LittleEndian)?;
-                part.texture_pos
-                    .height
-                    .write_to(f, ByteOrder::LittleEndian)?;
-                part.pos_x.write_to(f, ByteOrder::LittleEndian)?;
-                part.pos_y.write_to(f, ByteOrder::LittleEndian)?;
-                part.scale_x.write_to(f, ByteOrder::LittleEndian)?;
-                part.scale_y.write_to(f, ByteOrder::LittleEndian)?;
-                part.rotation.write_to(f, ByteOrder::LittleEndian)?;
-                part.flip_x.write_to(f, ByteOrder::LittleEndian)?;
-                part.flip_y.write_to(f, ByteOrder::LittleEndian)?;
-                part.multiply_color.write_to(f, ByteOrder::LittleEndian)?;
-                part.screen_color.write_to(f, ByteOrder::LittleEndian)?;
-                part.opacity.write_to(f, ByteOrder::LittleEndian)?;
+                part.texture_pos.x.write_to(f, Self::BYTE_ORDER)?;
+                part.texture_pos.y.write_to(f, Self::BYTE_ORDER)?;
+                part.texture_pos.width.write_to(f, Self::BYTE_ORDER)?;
+                part.texture_pos.height.write_to(f, Self::BYTE_ORDER)?;
+                part.pos_x.write_to(f, Self::BYTE_ORDER)?;
+                part.pos_y.write_to(f, Self::BYTE_ORDER)?;
+                part.scale_x.write_to(f, Self::BYTE_ORDER)?;
+                part.scale_y.write_to(f, Self::BYTE_ORDER)?;
+                part.rotation.write_to(f, Self::BYTE_ORDER)?;
+                part.flip_x.write_to(f, Self::BYTE_ORDER)?;
+                part.flip_y.write_to(f, Self::BYTE_ORDER)?;
+                part.multiply_color.write_to(f, Self::BYTE_ORDER)?;
+                part.screen_color.write_to(f, Self::BYTE_ORDER)?;
+                part.opacity.write_to(f, Self::BYTE_ORDER)?;
                 f.write(&part.unk1)?;
-                part.designation_id.write_to(f, ByteOrder::LittleEndian)?;
-                part.unk2.write_to(f, ByteOrder::LittleEndian)?;
-                part.depth.top_left.write_to(f, ByteOrder::LittleEndian)?;
-                part.depth
-                    .bottom_left
-                    .write_to(f, ByteOrder::LittleEndian)?;
-                part.depth.top_right.write_to(f, ByteOrder::LittleEndian)?;
-                part.depth
-                    .bottom_right
-                    .write_to(f, ByteOrder::LittleEndian)?;
-                (0 as u8).write_to(f, ByteOrder::LittleEndian)?; // terminator
+                part.designation_id.write_to(f, Self::BYTE_ORDER)?;
+                part.unk2.write_to(f, Self::BYTE_ORDER)?;
+                part.depth.top_left.write_to(f, Self::BYTE_ORDER)?;
+                part.depth.bottom_left.write_to(f, Self::BYTE_ORDER)?;
+                part.depth.top_right.write_to(f, Self::BYTE_ORDER)?;
+                part.depth.bottom_right.write_to(f, Self::BYTE_ORDER)?;
+                (0 as u8).write_to(f, Self::BYTE_ORDER)?; // terminator
             }
         }
 
-        (self.animations.len() as u32).write_to(f, ByteOrder::LittleEndian)?;
+        (self.animations.len() as u32).write_to(f, Self::BYTE_ORDER)?;
         for anim in &self.animations {
-            VarLenString(anim.name.clone()).write_to(f, ByteOrder::LittleEndian)?;
-            anim.interpolation.write_to(f, ByteOrder::LittleEndian)?;
-            (anim.steps.len() as u32).write_to(f, ByteOrder::LittleEndian)?;
+            VarLenString(anim.name.clone()).write_to(f, Self::BYTE_ORDER)?;
+            anim.interpolation.write_to(f, Self::BYTE_ORDER)?;
+            (anim.steps.len() as u32).write_to(f, Self::BYTE_ORDER)?;
             for step in &anim.steps {
-                step.sprite.write_to(f, ByteOrder::LittleEndian)?;
-                step.duration.write_to(f, ByteOrder::LittleEndian)?;
-                step.pos_x.write_to(f, ByteOrder::LittleEndian)?;
-                step.pos_y.write_to(f, ByteOrder::LittleEndian)?;
-                step.depth.write_to(f, ByteOrder::LittleEndian)?;
-                step.scale_x.write_to(f, ByteOrder::LittleEndian)?;
-                step.scale_y.write_to(f, ByteOrder::LittleEndian)?;
-                step.rotation.write_to(f, ByteOrder::LittleEndian)?;
-                step.multiply_color.write_to(f, ByteOrder::LittleEndian)?;
+                step.sprite.write_to(f, Self::BYTE_ORDER)?;
+                step.duration.write_to(f, Self::BYTE_ORDER)?;
+                step.pos_x.write_to(f, Self::BYTE_ORDER)?;
+                step.pos_y.write_to(f, Self::BYTE_ORDER)?;
+                step.depth.write_to(f, Self::BYTE_ORDER)?;
+                step.scale_x.write_to(f, Self::BYTE_ORDER)?;
+                step.scale_y.write_to(f, Self::BYTE_ORDER)?;
+                step.rotation.write_to(f, Self::BYTE_ORDER)?;
+                step.multiply_color.write_to(f, Self::BYTE_ORDER)?;
                 f.write(&step.unk)?;
-                step.opacity.write_to(f, ByteOrder::LittleEndian)?;
+                step.opacity.write_to(f, Self::BYTE_ORDER)?;
             }
         }
-        (0 as u8).write_to(f, ByteOrder::LittleEndian)?; // terminator
+        (0 as u8).write_to(f, Self::BYTE_ORDER)?; // terminator
 
         Ok(())
     }

@@ -1,5 +1,6 @@
 use bytestream::{ByteOrder, StreamReader};
 use serde::{Deserialize, Serialize};
+use serde_derive::{Deserialize, Serialize};
 use std::io::{Read, Result as IOResult, Seek, SeekFrom, Write};
 
 pub mod bccad;
@@ -31,4 +32,12 @@ pub fn get_bxcad_type<'a, F: Read + Seek>(f: &mut F) -> IOResult<BXCADType> {
     } else {
         Ok(BXCADType::None)
     }
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct PosInTexture {
+    pub x: u16,
+    pub y: u16,
+    pub width: u16,
+    pub height: u16,
 }
