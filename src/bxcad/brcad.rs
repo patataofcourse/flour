@@ -9,6 +9,7 @@ use std::io::{Read, Result as IOResult, Seek, Write};
 
 #[derive(Serialize, Deserialize)]
 pub struct BRCAD {
+    pub timestamp: Option<u32>,
     pub unk0: u32,
     pub spritesheet_num: u16,
     pub spritesheet_control: u16,

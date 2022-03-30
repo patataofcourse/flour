@@ -9,7 +9,7 @@ use std::io::{Read, Result as IOResult, Seek, Write};
 
 #[derive(Serialize, Deserialize)]
 pub struct BCCAD {
-    pub timestamp: u32,
+    pub timestamp: Option<u32>,
     pub texture_width: u16,
     pub texture_height: u16,
     pub sprites: Vec<Sprite>,
@@ -173,6 +173,11 @@ impl BXCAD<'_> for BCCAD {
             })
         }
 
+        let timestamp = match timestamp {
+            Self::TIMESTAMP => None,
+            _ => Some(timestamp),
+        };
+
         Ok(Self {
             timestamp,
             texture_width,
@@ -182,7 +187,9 @@ impl BXCAD<'_> for BCCAD {
         })
     }
     fn to_binary<F: Write>(&self, f: &mut F) -> IOResult<()> {
-        self.timestamp.write_to(f, Self::BYTE_ORDER)?;
+        self.timestamp
+            .unwrap_or(Self::TIMESTAMP)
+            .write_to(f, Self::BYTE_ORDER)?;
         self.texture_width.write_to(f, Self::BYTE_ORDER)?;
         self.texture_height.write_to(f, Self::BYTE_ORDER)?;
 
