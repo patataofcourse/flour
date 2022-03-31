@@ -1,6 +1,6 @@
 use bytestream::{ByteOrder, StreamReader};
+use semver::{Version, VersionReq};
 use serde::{Deserialize, Serialize};
-use serde_derive::{Deserialize, Serialize};
 use std::io::{Read, Result as IOResult, Seek, SeekFrom, Write};
 
 pub mod bccad;
@@ -18,6 +18,7 @@ pub trait BXCAD<'a>: Serialize + Deserialize<'a> {
     }
 }
 
+#[derive(Serialize, Deserialize)]
 pub enum BXCADType {
     BRCAD,
     BCCAD,
@@ -40,4 +41,10 @@ pub struct PosInTexture {
     pub y: u16,
     pub width: u16,
     pub height: u16,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct BXCADInfo {
+    pub bxcad_type: BXCADType,
+    pub flour_version: String,
 }

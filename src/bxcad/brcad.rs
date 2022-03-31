@@ -4,7 +4,7 @@ use crate::{
     Color, VarLenString,
 };
 use bytestream::{ByteOrder, StreamReader, StreamWriter};
-use serde_derive::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize};
 use std::io::{Read, Result as IOResult, Seek, Write};
 
 #[derive(Serialize, Deserialize)]

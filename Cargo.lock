@@ -76,8 +76,9 @@ version = "2.0.0-dev"
 dependencies = [
  "bytestream",
  "clap",
+ "semver",
  "serde",
- "serde_derive",
+ "serde-semver",
  "serde_json",
 ]
 
@@ -194,10 +195,48 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "73b4b750c782965c211b42f022f59af1fbceabdd026623714f104152f1ec149f"
 
 [[package]]
+name = "semver"
+version = "1.0.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d65bd28f48be7196d222d95b9243287f48d27aca604e08497513019ff0502cc4"
+dependencies = [
+ "serde",
+]
+
+[[package]]
 name = "serde"
 version = "1.0.136"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ce31e24b01e1e524df96f1c2fdd054405f8d7376249a5110886fb4b658484789"
+dependencies = [
+ "serde_derive",
+]
+
+[[package]]
+name = "serde-semver"
+version = "0.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9418264b4789ea78183e45ed1785323a0a9d28c24b612c2f360ce86d3c87c301"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "semver",
+ "serde",
+ "serde-semver-derive",
+ "syn",
+]
+
+[[package]]
+name = "serde-semver-derive"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bbb59c4005cc1e817ddad0dbc3b9af809cf49c989d0da46f735edf9629c0db19"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "semver",
+ "syn",
+]
 
 [[package]]
 name = "serde_derive"
