@@ -1,5 +1,5 @@
 use crate::{
-    bxcad::{PosInTexture, BXCAD},
+    bxcad::{BXCADType, PosInTexture, BXCAD},
     bytestream_addon::ByteStream,
     Color, VarLenString,
 };
@@ -64,6 +64,7 @@ pub struct AnimationStep {
 impl BXCAD<'_> for BRCAD {
     const BYTE_ORDER: ByteOrder = ByteOrder::BigEndian;
     const TIMESTAMP: u32 = 20100312;
+    const BXCAD_TYPE: BXCADType = BXCADType::BRCAD;
     fn from_binary<F: Read + Seek>(f: &mut F) -> IOResult<Self> {
         unimplemented!();
     }

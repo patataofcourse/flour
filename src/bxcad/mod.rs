@@ -1,14 +1,16 @@
 use bytestream::{ByteOrder, StreamReader};
 use semver::{Version, VersionReq};
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
 use std::io::{Read, Result as IOResult, Seek, SeekFrom, Write};
 
 pub mod bccad;
 pub mod brcad;
 
-pub trait BXCAD<'a>: Serialize + Deserialize<'a> {
+pub trait BXCAD<'a>: Serialize + for<'de> Deserialize<'de> {
     const BYTE_ORDER: ByteOrder;
     const TIMESTAMP: u32;
+    const BXCAD_TYPE: BXCADType;
     fn from_binary<F: Read + Seek>(f: &mut F) -> IOResult<Self>;
     fn to_binary<F: Write>(&self, f: &mut F) -> IOResult<()>;
     fn is_format<F: Read + Seek>(f: &mut F) -> IOResult<bool> {
@@ -28,8 +30,8 @@ pub enum BXCADType {
 pub fn get_bxcad_type<'a, F: Read + Seek>(f: &mut F) -> IOResult<BXCADType> {
     if bccad::BCCAD::is_format(f)? {
         Ok(BXCADType::BCCAD)
-    // } else if brcad::BRCAD::is_format(f)? {
-    //     Ok(BXCADType::BRCAD)
+    } else if brcad::BRCAD::is_format(f)? {
+        Ok(BXCADType::BRCAD)
     } else {
         Ok(BXCADType::None)
     }
@@ -44,7 +46,26 @@ pub struct PosInTexture {
 }
 
 #[derive(Serialize, Deserialize)]
-pub struct BXCADInfo {
+pub struct BXCADWrapper {
     pub bxcad_type: BXCADType,
     pub flour_version: String,
+    pub data: Value,
+}
+
+impl BXCADWrapper {
+    pub fn from_bxcad<'a, T: BXCAD<'a>>(bxcad: T) -> Self {
+        Self {
+            bxcad_type: T::BXCAD_TYPE,
+            flour_version: env!("CARGO_PKG_VERSION").to_string(),
+            data: serde_json::to_value(bxcad).unwrap(),
+        }
+    }
+    pub fn to_bxcad<'a, T: BXCAD<'a>>(self) -> Option<T> {
+        //TODO: check version
+        //TODO: this might false-positive some bxcads
+        match serde_json::from_value(self.data) {
+            Ok(c) => Some(c),
+            Err(_) => None,
+        }
+    }
 }

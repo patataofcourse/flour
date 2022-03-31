@@ -1,5 +1,5 @@
 use crate::{
-    bxcad::{PosInTexture, BXCAD},
+    bxcad::{BXCADType, PosInTexture, BXCAD},
     bytestream_addon::ByteStream,
     Color, VarLenString,
 };
@@ -73,6 +73,7 @@ pub struct AnimationStep {
 impl BXCAD<'_> for BCCAD {
     const BYTE_ORDER: ByteOrder = ByteOrder::LittleEndian;
     const TIMESTAMP: u32 = 20131007;
+    const BXCAD_TYPE: BXCADType = BXCADType::BCCAD;
     fn from_binary<F: Read>(f: &mut F) -> IOResult<Self> {
         let timestamp = u32::read_from(f, Self::BYTE_ORDER)?;
         let texture_width = u16::read_from(f, Self::BYTE_ORDER)?;
