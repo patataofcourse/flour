@@ -61,11 +61,19 @@ impl BXCADWrapper {
         }
     }
     pub fn to_bxcad<'a, T: BXCAD<'a>>(self) -> Option<T> {
-        //TODO: check version
+        let requirement =
+            VersionReq::parse(&format!("<={}, >=2.0", env!("CARGO_PKG_VERSION"))).unwrap();
+        let version = Version::parse(&self.flour_version).ok()?; //TODO: add specific error
+
+        if !requirement.matches(&version) {
+            //TODO: add specific error
+            return None;
+        }
+
         //TODO: this might false-positive some bxcads
         match serde_json::from_value(self.data) {
             Ok(c) => Some(c),
-            Err(_) => None,
+            Err(_) => None, //TODO: add specific error
         }
     }
 }
