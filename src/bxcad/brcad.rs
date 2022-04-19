@@ -171,6 +171,7 @@ impl BXCAD<'_> for BRCAD {
         })
     }
     fn to_binary<F: Write>(&self, f: &mut F) -> IOResult<()> {
+        self.timestamp.unwrap_or(Self::TIMESTAMP).write_to(f, Self::BYTE_ORDER)?;
         unimplemented!();
     }
 }
