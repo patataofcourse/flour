@@ -1,5 +1,5 @@
 use clap::{Parser, Subcommand};
-use flour::BCCAD;
+use flour::{BCCAD, bxcad::BXCAD, BRCAD};
 use std::{
     fs::File,
     io::{Read, Result, Write},
@@ -39,6 +39,7 @@ enum Command {
     },
 }
 
+/*
 fn main() -> Result<()> {
     let cli = Cli::parse();
     match cli.command {
@@ -84,5 +85,13 @@ fn main() -> Result<()> {
             );
         }
     }
+    Ok(())
+}
+*/
+
+fn main() -> Result<()> {
+    let mut in_file = File::open("test_files/manzai_character.brcad")?;
+    let brcad = BRCAD::from_binary(&mut in_file)?;
+    println!("{}", serde_json::to_string_pretty(&brcad)?);
     Ok(())
 }
