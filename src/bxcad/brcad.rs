@@ -4,7 +4,8 @@ use crate::{
 };
 use bytestream::{ByteOrder, StreamReader, StreamWriter};
 use serde::{Deserialize, Serialize};
-use std::io::{Read, Result as IOResult, Seek, Write};
+use std::io::{Read, Result as IOResult, Seek, Write, self};
+use encoding_rs::SHIFT_JIS;
 
 #[derive(Serialize, Deserialize)]
 pub struct BRCAD {
@@ -18,7 +19,6 @@ pub struct BRCAD {
     pub sprites: Vec<Sprite>,
     pub unk2: u16,
     pub animations: Vec<Animation>,
-    pub labels_file: Option<BRCADLabels>,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -168,7 +168,6 @@ impl BXCAD<'_> for BRCAD {
             sprites,
             unk2,
             animations,
-            labels_file: None,
         })
     }
     fn to_binary<F: Write>(&self, f: &mut F) -> IOResult<()> {
@@ -178,6 +177,19 @@ impl BXCAD<'_> for BRCAD {
 
 impl BRCAD {
     pub fn apply_labels<F: Read>(&self, labels: &mut F) -> IOResult<()> {
+        let mut data = vec![];
+        labels.read_to_end(&mut data)?;
+        let (labdata, _, errors) = SHIFT_JIS.decode(&data);
+        if errors {
+            eprintln!("Could not decode label data from Shift-JIS!");
+            Err(io::Error::from(io::ErrorKind::Other))?
+        }
+        for line in labdata.lines() {
+            let line = line.split_once("//").unwrap_or((line, "")).0;
+            if line.starts_with("#define ") {
+                println!("{}", line);
+            }
+        }
         unimplemented!()
     }
 }
