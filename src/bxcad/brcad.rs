@@ -188,13 +188,14 @@ impl BXCAD<'_> for BRCAD {
                 part.texture_pos.y.write_to(f, Self::BYTE_ORDER)?;
                 part.texture_pos.width.write_to(f, Self::BYTE_ORDER)?;
                 part.texture_pos.height.write_to(f, Self::BYTE_ORDER)?;
+                part.unk.write_to(f, Self::BYTE_ORDER)?;
                 part.pos_x.write_to(f, Self::BYTE_ORDER)?;
                 part.pos_y.write_to(f, Self::BYTE_ORDER)?;
                 part.scale_x.write_to(f, Self::BYTE_ORDER)?;
                 part.scale_y.write_to(f, Self::BYTE_ORDER)?;
+                part.rotation.write_to(f, Self::BYTE_ORDER)?;
                 part.flip_x.write_to(f, Self::BYTE_ORDER)?;
                 part.flip_y.write_to(f, Self::BYTE_ORDER)?;
-                part.rotation.write_to(f, Self::BYTE_ORDER)?;
                 part.opacity.write_to(f, Self::BYTE_ORDER)?;
                 (0 as u8).write_to(f, Self::BYTE_ORDER)?; // terminator/padding
             }
