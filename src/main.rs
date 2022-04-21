@@ -90,10 +90,11 @@ fn main() -> Result<()> {
 */
 
 fn main() -> Result<()> {
-    let mut in_file = File::open("test_files/manzai_character.brcad")?;
-    let mut labels = File::open("test_files/rcad_manzai_character_labels.h")?;
-    let mut brcad = BRCAD::from_binary(&mut in_file)?;
-    brcad.apply_labels(&mut labels)?;
-    println!("{}", serde_json::to_string_pretty(&brcad)?);
+    let mut in_file = File::open("test_files/manzai_character.json")?;
+    let mut json = String::new();
+    in_file.read_to_string(&mut json)?;
+    let brcad: BRCAD = serde_json::from_str(&json)?;
+    let mut out_file = File::create("a.brcad")?;
+    brcad.to_binary(&mut out_file)?;
     Ok(())
 }

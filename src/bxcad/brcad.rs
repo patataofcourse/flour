@@ -172,7 +172,51 @@ impl BXCAD<'_> for BRCAD {
         self.timestamp
             .unwrap_or(Self::TIMESTAMP)
             .write_to(f, Self::BYTE_ORDER)?;
-        unimplemented!();
+        self.unk0.write_to(f, Self::BYTE_ORDER)?;
+        self.spritesheet_num.write_to(f, Self::BYTE_ORDER)?;
+        self.spritesheet_control.write_to(f, Self::BYTE_ORDER)?;
+        self.texture_width.write_to(f, Self::BYTE_ORDER)?;
+        self.texture_height.write_to(f, Self::BYTE_ORDER)?;
+
+        (self.sprites.len() as u16).write_to(f, Self::BYTE_ORDER)?;
+        self.unk1.write_to(f, Self::BYTE_ORDER)?;
+        for sprite in &self.sprites {
+            (sprite.parts.len() as u16).write_to(f, Self::BYTE_ORDER)?;
+            sprite.unk.write_to(f, Self::BYTE_ORDER)?;
+            for part in &sprite.parts {
+                part.texture_pos.x.write_to(f, Self::BYTE_ORDER)?;
+                part.texture_pos.y.write_to(f, Self::BYTE_ORDER)?;
+                part.texture_pos.width.write_to(f, Self::BYTE_ORDER)?;
+                part.texture_pos.height.write_to(f, Self::BYTE_ORDER)?;
+                part.pos_x.write_to(f, Self::BYTE_ORDER)?;
+                part.pos_y.write_to(f, Self::BYTE_ORDER)?;
+                part.scale_x.write_to(f, Self::BYTE_ORDER)?;
+                part.scale_y.write_to(f, Self::BYTE_ORDER)?;
+                part.flip_x.write_to(f, Self::BYTE_ORDER)?;
+                part.flip_y.write_to(f, Self::BYTE_ORDER)?;
+                part.rotation.write_to(f, Self::BYTE_ORDER)?;
+                part.opacity.write_to(f, Self::BYTE_ORDER)?;
+                (0 as u8).write_to(f, Self::BYTE_ORDER)?; // terminator/padding
+            }
+        }
+
+        (self.animations.len() as u16).write_to(f, Self::BYTE_ORDER)?;
+        self.unk2.write_to(f, Self::BYTE_ORDER)?;
+        for anim in &self.animations {
+            (anim.steps.len() as u16).write_to(f, Self::BYTE_ORDER)?;
+            anim.unk.write_to(f, Self::BYTE_ORDER)?;
+            for step in &anim.steps {
+                step.sprite.write_to(f, Self::BYTE_ORDER)?;
+                step.duration.write_to(f, Self::BYTE_ORDER)?;
+                step.unk0.write_to(f, Self::BYTE_ORDER)?;
+                step.scale_x.write_to(f, Self::BYTE_ORDER)?;
+                step.scale_y.write_to(f, Self::BYTE_ORDER)?;
+                step.rotation.write_to(f, Self::BYTE_ORDER)?;
+                step.opacity.write_to(f, Self::BYTE_ORDER)?;
+                f.write(&step.unk1)?;
+            }
+        }
+        Ok(())
     }
 }
 
