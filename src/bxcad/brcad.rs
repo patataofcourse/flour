@@ -3,9 +3,9 @@ use crate::{
     bytestream_addon::ByteStream,
 };
 use bytestream::{ByteOrder, StreamReader, StreamWriter};
-use serde::{Deserialize, Serialize};
-use std::io::{Read, Result as IOResult, Seek, Write, self};
 use encoding_rs::SHIFT_JIS;
+use serde::{Deserialize, Serialize};
+use std::io::{self, Read, Result as IOResult, Seek, Write};
 
 #[derive(Serialize, Deserialize)]
 pub struct BRCAD {
@@ -114,7 +114,6 @@ impl BXCAD<'_> for BRCAD {
             }
             sprites.push(Sprite { unk, parts });
         }
-        
         let animation_count = u16::read_from(f, Self::BYTE_ORDER)?;
         let unk2 = u16::read_from(f, Self::BYTE_ORDER)?; //unknown
         let mut animations = vec![];
@@ -151,7 +150,6 @@ impl BXCAD<'_> for BRCAD {
                 steps,
             });
         }
-        
         let timestamp = match timestamp {
             Self::TIMESTAMP => None,
             _ => Some(timestamp),
@@ -163,7 +161,7 @@ impl BXCAD<'_> for BRCAD {
             spritesheet_num,
             spritesheet_control,
             texture_width,
-            texture_height, 
+            texture_height,
             unk1,
             sprites,
             unk2,
@@ -171,13 +169,15 @@ impl BXCAD<'_> for BRCAD {
         })
     }
     fn to_binary<F: Write>(&self, f: &mut F) -> IOResult<()> {
-        self.timestamp.unwrap_or(Self::TIMESTAMP).write_to(f, Self::BYTE_ORDER)?;
+        self.timestamp
+            .unwrap_or(Self::TIMESTAMP)
+            .write_to(f, Self::BYTE_ORDER)?;
         unimplemented!();
     }
 }
 
 impl BRCAD {
-    pub fn apply_labels<F: Read>(&self, labels: &mut F) -> IOResult<()> {
+    pub fn apply_labels<F: Read>(&mut self, labels: &mut F) -> IOResult<()> {
         let mut data = vec![];
         labels.read_to_end(&mut data)?;
         let (labdata, _, errors) = SHIFT_JIS.decode(&data);
@@ -186,11 +186,44 @@ impl BRCAD {
             Err(io::Error::from(io::ErrorKind::Other))?
         }
         for line in labdata.lines() {
-            let line = line.split_once("//").unwrap_or((line, "")).0;
+            let line = line
+                .split_once("//")
+                .unwrap_or((line, ""))
+                .0
+                .replace("\t", " ");
             if line.starts_with("#define ") {
-                println!("{}", line);
+                // fuck spacing so much
+                let line = line
+                    .split_once(" ")
+                    .unwrap()
+                    .1
+                    .trim()
+                    .split_once(" ")
+                    .unwrap();
+                let num = match line
+                    .1
+                    .trim()
+                    .split_once(" ")
+                    .unwrap_or((line.1, ""))
+                    .0
+                    .parse::<usize>()
+                {
+                    Ok(c) => c,
+                    Err(_) => {
+                        eprintln!("Failed to parse labels file");
+                        Err(io::Error::from(io::ErrorKind::Other))?
+                    }
+                };
+
+                match self.animations.get_mut(num) {
+                    Some(c) => c.name = Some(line.0.to_string()),
+                    None => {
+                        eprintln!("Failed to parse labels file");
+                        Err(io::Error::from(io::ErrorKind::Other))?
+                    }
+                }
             }
         }
-        unimplemented!()
+        Ok(())
     }
 }

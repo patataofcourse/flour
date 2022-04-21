@@ -1,5 +1,5 @@
 use clap::{Parser, Subcommand};
-use flour::{BCCAD, bxcad::BXCAD, BRCAD};
+use flour::{bxcad::BXCAD, BCCAD, BRCAD};
 use std::{
     fs::File,
     io::{Read, Result, Write},
@@ -92,7 +92,7 @@ fn main() -> Result<()> {
 fn main() -> Result<()> {
     let mut in_file = File::open("test_files/manzai_character.brcad")?;
     let mut labels = File::open("test_files/rcad_manzai_character_labels.h")?;
-    let brcad = BRCAD::from_binary(&mut in_file)?;
+    let mut brcad = BRCAD::from_binary(&mut in_file)?;
     brcad.apply_labels(&mut labels)?;
     println!("{}", serde_json::to_string_pretty(&brcad)?);
     Ok(())
