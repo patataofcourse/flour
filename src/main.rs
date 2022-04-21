@@ -1,32 +1,53 @@
 use clap::{Parser, Subcommand};
-use flour::{bxcad::BXCAD, BCCAD, BRCAD};
+use flour::{
+    bxcad::{self, BXCADType, BXCADWrapper, BXCAD},
+    BCCAD, BRCAD,
+};
+use serde::Deserialize;
 use std::{
     fs::File,
-    io::{Read, Result, Write},
+    io::{self, Read, Result, Write},
     path::PathBuf,
 };
 
-#[derive(Parser)]
+#[derive(Parser, Debug)]
 #[clap(
     author,
     version,
-    about = "Serializes and deserializes BCCAD files to and from JSON"
+    about = "Serializes and deserializes BCCAD/BRCAD files to and from JSON"
 )]
 struct Cli {
     #[clap(subcommand)]
     command: Command,
 }
 
-#[derive(Subcommand)]
+#[derive(Subcommand, Debug)]
 enum Command {
     /// Convert a BCCAD file into a manually editable JSON file
     Serialize {
         #[clap(parse(from_os_str))]
-        /// The BCCAD file to convert
-        bccad: PathBuf,
+        /// The B_CAD file to convert
+        bxcad: PathBuf,
         #[clap(parse(from_os_str))]
         /// Location of the JSON file to export (optional)
         json: Option<PathBuf>,
+        #[clap(short = 'c', long)]
+        /// File is a BCCAD
+        is_bccad: bool,
+        #[clap(short = 'r', long, conflicts_with = "is-bccad")]
+        /// File is a BRCAD
+        is_brcad: bool,
+        #[clap(
+            short = 'a',
+            long,
+            conflicts_with = "is-brcad",
+            conflicts_with = "is-bccad"
+        )]
+        /// Automatically detect whether the file is a BRCAD or a BCCAD (default)
+        auto: bool,
+        #[clap(short, long, parse(from_os_str))]
+        /// (BRCAD only) Adds labels from label file
+        labels: Option<PathBuf>,
     },
     /// Convert a JSON file exported by flour back into a BCCAD
     Deserialize {
@@ -34,67 +55,108 @@ enum Command {
         /// The JSON file to convert
         json: PathBuf,
         #[clap(parse(from_os_str))]
-        /// Location of the BCCAD file to export (optional)
-        bccad: Option<PathBuf>,
+        /// Location of the B_CAD file to export (optional)
+        bxcad: Option<PathBuf>,
     },
 }
 
-/*
 fn main() -> Result<()> {
     let cli = Cli::parse();
+
     match cli.command {
-        Command::Serialize { bccad, json } => {
+        Command::Serialize {
+            bxcad,
+            json,
+            is_bccad,
+            is_brcad,
+            labels,
+            ..
+        } => {
             let json = match json {
                 Some(c) => c,
                 None => {
-                    let mut p = bccad.clone();
+                    let mut p = bxcad.clone();
                     p.set_extension("json");
                     p
                 }
             };
-            let mut in_file = File::open(&bccad)?;
+
+            let mut in_file = File::open(&bxcad)?;
             let mut out_file = File::create(&json)?;
-            let bccad_ = BCCAD::from_bccad(&mut in_file)?;
-            let json_ = bccad_.to_json()?;
+
+            let bxcad_type = if is_bccad {
+                BXCADType::BCCAD
+            } else if is_brcad {
+                BXCADType::BRCAD
+            } else {
+                bxcad::get_bxcad_type(&mut in_file)?
+            };
+
+            if labels != None && bxcad_type != BXCADType::BRCAD {
+                eprintln!("--labels can only be used on BRCAD files!");
+                Err(io::Error::from(io::ErrorKind::Other))?
+            }
+
+            let bxcad_wrapper = match bxcad_type {
+                BXCADType::BCCAD => {
+                    let bccad = BCCAD::from_binary(&mut in_file)?;
+                    BXCADWrapper::from_bxcad(bccad)
+                }
+                BXCADType::BRCAD => {
+                    let brcad = BRCAD::from_binary(&mut in_file)?;
+                    BXCADWrapper::from_bxcad(brcad)
+                }
+                BXCADType::Custom(_) => {
+                    eprintln!("Custom BXCAD types are unsupported!");
+                    Err(io::Error::from(io::ErrorKind::Other))?
+                }
+            };
+
+            let json_ = serde_json::to_string_pretty(&bxcad_wrapper)?;
             writeln!(out_file, "{}", json_)?;
             println!(
                 "Serialized {:?} to {:?}",
-                bccad.into_os_string(),
+                bxcad.into_os_string(),
                 json.into_os_string()
             );
         }
-        Command::Deserialize { json, bccad } => {
-            let bccad = match bccad {
+        Command::Deserialize { json, bxcad } => {
+            let mut in_file = File::open(&json)?;
+            let mut json_ = String::new();
+            in_file.read_to_string(&mut json_)?;
+            let bxcad_wrapper: BXCADWrapper = serde_json::from_str(&json_)?;
+
+            let bxcad = match bxcad {
                 Some(c) => c,
                 None => {
                     let mut p = json.clone();
-                    p.set_extension("bccad");
+                    p.set_extension(match &bxcad_wrapper.bxcad_type {
+                        BXCADType::BCCAD => "bccad",
+                        BXCADType::BRCAD => "brcad",
+                        BXCADType::Custom(_) => unimplemented!(),
+                    });
                     p
                 }
             };
-            let mut in_file = File::open(&json)?;
-            let mut out_file = File::create(&bccad)?;
-            let mut json_ = String::new();
-            in_file.read_to_string(&mut json_)?;
-            let bccad_ = BCCAD::from_json(&json_)?;
-            bccad_.to_bccad(&mut out_file)?;
+
+            let mut out_file = File::create(&bxcad)?;
+            match &bxcad_wrapper.bxcad_type {
+                BXCADType::BCCAD => {
+                    let bccad = BCCAD::deserialize(bxcad_wrapper.data)?;
+                    bccad.to_binary(&mut out_file)?;
+                }
+                BXCADType::BRCAD => {
+                    let brcad = BRCAD::deserialize(bxcad_wrapper.data)?;
+                    brcad.to_binary(&mut out_file)?;
+                }
+                BXCADType::Custom(_) => unimplemented!(),
+            }
             println!(
                 "Deserialized {:?} to {:?}",
                 json.into_os_string(),
-                bccad.into_os_string()
+                bxcad.into_os_string()
             );
         }
     }
-    Ok(())
-}
-*/
-
-fn main() -> Result<()> {
-    let mut in_file = File::open("test_files/manzai_character.json")?;
-    let mut json = String::new();
-    in_file.read_to_string(&mut json)?;
-    let brcad: BRCAD = serde_json::from_str(&json)?;
-    let mut out_file = File::create("a.brcad")?;
-    brcad.to_binary(&mut out_file)?;
     Ok(())
 }

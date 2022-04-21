@@ -20,11 +20,11 @@ pub trait BXCAD<'a>: Serialize + for<'de> Deserialize<'de> {
     }
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, PartialEq)]
 pub enum BXCADType {
     BRCAD,
     BCCAD,
-    None,
+    Custom(String),
 }
 
 pub fn get_bxcad_type<'a, F: Read + Seek>(f: &mut F) -> IOResult<BXCADType> {
@@ -33,7 +33,7 @@ pub fn get_bxcad_type<'a, F: Read + Seek>(f: &mut F) -> IOResult<BXCADType> {
     } else if brcad::BRCAD::is_format(f)? {
         Ok(BXCADType::BRCAD)
     } else {
-        Ok(BXCADType::None)
+        Ok(BXCADType::Custom("unsupported".to_string()))
     }
 }
 
