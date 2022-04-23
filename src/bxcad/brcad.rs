@@ -1,11 +1,12 @@
 use crate::{
     bxcad::{BXCADType, PosInTexture, BXCAD},
     bytestream_addon::ByteStream,
+    error::{Error, Result},
 };
 use bytestream::{ByteOrder, StreamReader, StreamWriter};
 use encoding_rs::SHIFT_JIS;
 use serde::{Deserialize, Serialize};
-use std::io::{self, Read, Result as IOResult, Seek, Write};
+use std::io::{Read, Seek, Write};
 
 #[derive(Serialize, Deserialize)]
 pub struct BRCAD {
@@ -67,7 +68,7 @@ impl BXCAD<'_> for BRCAD {
     const BYTE_ORDER: ByteOrder = ByteOrder::BigEndian;
     const TIMESTAMP: u32 = 20100312;
     const BXCAD_TYPE: BXCADType = BXCADType::BRCAD;
-    fn from_binary<F: Read + Seek>(f: &mut F) -> IOResult<Self> {
+    fn from_binary<F: Read + Seek>(f: &mut F) -> Result<Self> {
         let timestamp = u32::read_from(f, Self::BYTE_ORDER)?;
         let unk0 = u32::read_from(f, Self::BYTE_ORDER)?;
         let spritesheet_num = u16::read_from(f, Self::BYTE_ORDER)?;
@@ -168,7 +169,7 @@ impl BXCAD<'_> for BRCAD {
             animations,
         })
     }
-    fn to_binary<F: Write>(&self, f: &mut F) -> IOResult<()> {
+    fn to_binary<F: Write>(&self, f: &mut F) -> Result<()> {
         self.timestamp
             .unwrap_or(Self::TIMESTAMP)
             .write_to(f, Self::BYTE_ORDER)?;
@@ -222,13 +223,12 @@ impl BXCAD<'_> for BRCAD {
 }
 
 impl BRCAD {
-    pub fn apply_labels<F: Read>(&mut self, labels: &mut F) -> IOResult<()> {
+    pub fn apply_labels<F: Read>(&mut self, labels: &mut F) -> Result<()> {
         let mut data = vec![];
         labels.read_to_end(&mut data)?;
         let (labdata, _, errors) = SHIFT_JIS.decode(&data);
         if errors {
-            eprintln!("Could not decode label data from Shift-JIS!");
-            Err(io::Error::from(io::ErrorKind::Other))?
+            Err(Error::LabelsFileNotShiftJIS)?
         }
         for line in labdata.lines() {
             let line = line
@@ -254,18 +254,12 @@ impl BRCAD {
                     .parse::<usize>()
                 {
                     Ok(c) => c,
-                    Err(_) => {
-                        eprintln!("Failed to parse labels file");
-                        Err(io::Error::from(io::ErrorKind::Other))?
-                    }
+                    Err(_) => Err(Error::BadLabelsFile)?,
                 };
 
                 match self.animations.get_mut(num) {
                     Some(c) => c.name = Some(line.0.to_string()),
-                    None => {
-                        eprintln!("Failed to parse labels file");
-                        Err(io::Error::from(io::ErrorKind::Other))?
-                    }
+                    None => Err(Error::BadLabelsFile)?,
                 }
             }
         }

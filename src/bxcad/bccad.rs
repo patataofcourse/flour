@@ -1,11 +1,12 @@
 use crate::{
     bxcad::{BXCADType, PosInTexture, BXCAD},
     bytestream_addon::ByteStream,
+    error::Result,
     Color, VarLenString,
 };
 use bytestream::{ByteOrder, StreamReader, StreamWriter};
 use serde::{Deserialize, Serialize};
-use std::io::{Read, Result as IOResult, Seek, Write};
+use std::io::{Read, Seek, Write};
 
 #[derive(Serialize, Deserialize)]
 pub struct BCCAD {
@@ -74,7 +75,7 @@ impl BXCAD<'_> for BCCAD {
     const BYTE_ORDER: ByteOrder = ByteOrder::LittleEndian;
     const TIMESTAMP: u32 = 20131007;
     const BXCAD_TYPE: BXCADType = BXCADType::BCCAD;
-    fn from_binary<F: Read>(f: &mut F) -> IOResult<Self> {
+    fn from_binary<F: Read>(f: &mut F) -> Result<Self> {
         let timestamp = u32::read_from(f, Self::BYTE_ORDER)?;
         let texture_width = u16::read_from(f, Self::BYTE_ORDER)?;
         let texture_height = u16::read_from(f, Self::BYTE_ORDER)?;
@@ -187,7 +188,7 @@ impl BXCAD<'_> for BCCAD {
             animations,
         })
     }
-    fn to_binary<F: Write>(&self, f: &mut F) -> IOResult<()> {
+    fn to_binary<F: Write>(&self, f: &mut F) -> Result<()> {
         self.timestamp
             .unwrap_or(Self::TIMESTAMP)
             .write_to(f, Self::BYTE_ORDER)?;
@@ -249,19 +250,19 @@ impl BXCAD<'_> for BCCAD {
 }
 impl BCCAD {
     #[deprecated]
-    pub fn from_bccad<F: Read + Seek>(f: &mut F) -> IOResult<Self> {
+    pub fn from_bccad<F: Read + Seek>(f: &mut F) -> Result<Self> {
         Self::from_binary(f)
     }
     #[deprecated]
-    pub fn to_bccad<F: Write>(&self, f: &mut F) -> IOResult<()> {
+    pub fn to_bccad<F: Write>(&self, f: &mut F) -> Result<()> {
         self.to_binary(f)
     }
     #[deprecated]
-    pub fn from_json(json: &str) -> Result<Self, serde_json::Error> {
-        serde_json::from_str(json)
+    pub fn from_json(json: &str) -> Result<Self> {
+        Ok(serde_json::from_str(json)?)
     }
     #[deprecated]
-    pub fn to_json(&self) -> Result<String, serde_json::Error> {
-        serde_json::to_string_pretty(self)
+    pub fn to_json(&self) -> Result<String> {
+        Ok(serde_json::to_string_pretty(self)?)
     }
 }

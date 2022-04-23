@@ -1,8 +1,9 @@
+use crate::error::Result;
 use bytestream::{ByteOrder, StreamReader};
 use semver::{Version, VersionReq};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use std::io::{Read, Result as IOResult, Seek, SeekFrom, Write};
+use std::io::{Read, Seek, SeekFrom, Write};
 
 pub mod bccad;
 pub mod brcad;
@@ -11,9 +12,9 @@ pub trait BXCAD<'a>: Serialize + for<'de> Deserialize<'de> {
     const BYTE_ORDER: ByteOrder;
     const TIMESTAMP: u32;
     const BXCAD_TYPE: BXCADType;
-    fn from_binary<F: Read + Seek>(f: &mut F) -> IOResult<Self>;
-    fn to_binary<F: Write>(&self, f: &mut F) -> IOResult<()>;
-    fn is_format<F: Read + Seek>(f: &mut F) -> IOResult<bool> {
+    fn from_binary<F: Read + Seek>(f: &mut F) -> Result<Self>;
+    fn to_binary<F: Write>(&self, f: &mut F) -> Result<()>;
+    fn is_format<F: Read + Seek>(f: &mut F) -> Result<bool> {
         let timestamp = u32::read_from(f, Self::BYTE_ORDER)?;
         f.seek(SeekFrom::Current(-4))?;
         Ok(timestamp == Self::TIMESTAMP)
@@ -27,7 +28,7 @@ pub enum BXCADType {
     Custom(String),
 }
 
-pub fn get_bxcad_type<'a, F: Read + Seek>(f: &mut F) -> IOResult<BXCADType> {
+pub fn get_bxcad_type<'a, F: Read + Seek>(f: &mut F) -> Result<BXCADType> {
     if bccad::BCCAD::is_format(f)? {
         Ok(BXCADType::BCCAD)
     } else if brcad::BRCAD::is_format(f)? {

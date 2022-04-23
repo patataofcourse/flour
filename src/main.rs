@@ -1,12 +1,13 @@
 use clap::{Parser, Subcommand};
 use flour::{
     bxcad::{self, BXCADType, BXCADWrapper, BXCAD},
+    error::{Error, Result},
     BCCAD, BRCAD,
 };
 use serde::Deserialize;
 use std::{
     fs::File,
-    io::{self, Read, Result, Write},
+    io::{Read, Write},
     path::PathBuf,
 };
 
@@ -60,7 +61,14 @@ enum Command {
     },
 }
 
-fn main() -> Result<()> {
+fn main() {
+    match run() {
+        Ok(_) => {}
+        Err(e) => eprintln!("ERROR: {}", e),
+    }
+}
+
+fn run() -> Result<()> {
     let cli = Cli::parse();
 
     match cli.command {
@@ -93,8 +101,7 @@ fn main() -> Result<()> {
             };
 
             if labels != None && bxcad_type != BXCADType::BRCAD {
-                eprintln!("--labels can only be used on BRCAD files!");
-                Err(io::Error::from(io::ErrorKind::Other))?
+                Err(Error::LabelsOnNotBRCAD)?
             }
 
             let bxcad_wrapper = match bxcad_type {
@@ -106,10 +113,7 @@ fn main() -> Result<()> {
                     let brcad = BRCAD::from_binary(&mut in_file)?;
                     BXCADWrapper::from_bxcad(brcad)
                 }
-                BXCADType::Custom(_) => {
-                    eprintln!("Custom BXCAD types are unsupported!");
-                    Err(io::Error::from(io::ErrorKind::Other))?
-                }
+                BXCADType::Custom(_) => Err(Error::NonImplementedFeature("custom BXCAD types"))?,
             };
 
             let json_ = serde_json::to_string_pretty(&bxcad_wrapper)?;

@@ -6,7 +6,7 @@ version = "2.0.0-dev"
 edition = "2021"
 
 readme = "README.md"
-license_file = "LICENSE"
+license-file = "LICENSE"
 repository = "https://github.com/patataofcourse/flour.git"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
@@ -19,3 +19,4 @@ clap = { version = "3.1.6", features = ["derive"] }
 serde-semver = "0.2.1"
 semver = "1.0.7"
 encoding_rs = "0.8"
+thiserror = "1.0"

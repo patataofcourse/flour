@@ -2,6 +2,7 @@ use serde::{Deserialize, Serialize};
 
 pub mod bxcad;
 pub(crate) mod bytestream_addon;
+pub mod error;
 
 pub use bxcad::{bccad::BCCAD, brcad::BRCAD, BXCAD};
 
