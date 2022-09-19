@@ -21,7 +21,7 @@ pub enum Error {
     #[error("Incompatible version {0}")]
     IncompatibleVersion(semver::Version),
     #[error("File given is not a BXCAD file")]
-    NotBXCAD
+    NotBXCAD,
 }
 
 impl From<std::io::Error> for Error {
