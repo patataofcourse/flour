@@ -17,7 +17,7 @@ pub struct BRCAD {
     pub unk0: u32,
     /// Number of the spritesheet to use in a specific
     pub spritesheet_num: u16,
-    /// ??????
+    /// Might be a BOM?
     pub spritesheet_control: u16,
     /// Width of the associated texture in pixels
     pub texture_width: u16,
