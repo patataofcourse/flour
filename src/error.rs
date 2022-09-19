@@ -6,6 +6,8 @@ pub type Result<T> = std::result::Result<T, Error>;
 pub enum Error {
     #[error("System error: {0}")]
     IOError(std::io::Error),
+    #[error("Error parsing version: {0}")]
+    SemverError(semver::Error),
     #[error("Error when parsing string: {0}")]
     StringUtf8Error(std::string::FromUtf8Error),
     #[error("--labels can only be used for BRCAD files")]
@@ -16,6 +18,8 @@ pub enum Error {
     BadLabelsFile,
     #[error("Could not decode labels file from Shift-JIS!")]
     LabelsFileNotShiftJIS,
+    #[error("Incompatible version {0}")]
+    IncompatibleVersion(semver::Version)
 }
 
 impl From<std::io::Error> for Error {
@@ -33,5 +37,11 @@ impl From<std::string::FromUtf8Error> for Error {
 impl From<serde_json::Error> for Error {
     fn from(err: serde_json::Error) -> Self {
         Self::IOError(std::io::Error::from(err))
+    }
+}
+
+impl From<semver::Error> for Error {
+    fn from(err: semver::Error) -> Self {
+        Self::SemverError(err)
     }
 }

@@ -1,4 +1,4 @@
-use crate::error::Result;
+use crate::error::{Result, Error};
 use bytestream::{ByteOrder, StreamReader};
 use semver::{Version, VersionReq};
 use serde::{Deserialize, Serialize};
@@ -61,20 +61,17 @@ impl BXCADWrapper {
             data: serde_json::to_value(bxcad).unwrap(),
         }
     }
-    pub fn to_bxcad<'a, T: BXCAD<'a>>(self) -> Option<T> {
+    pub fn to_bxcad<'a, T: BXCAD<'a>>(self) -> Result<T> {
         let requirement =
-            VersionReq::parse(&format!("<={}, >=2.0", env!("CARGO_PKG_VERSION"))).unwrap();
-        let version = Version::parse(&self.flour_version).ok()?; //TODO: add specific error
+            VersionReq::parse(&format!("<={}, >=2.0.0-0", env!("CARGO_PKG_VERSION")))?;
+        let version = Version::parse(&self.flour_version)?; //TODO: add specific error
 
         if !requirement.matches(&version) {
             //TODO: add specific error
-            return None;
+            return Err(Error::IncompatibleVersion(version));
         }
 
         //TODO: this might false-positive some bxcads
-        match serde_json::from_value(self.data) {
-            Ok(c) => Some(c),
-            Err(_) => None, //TODO: add specific error
-        }
+        Ok(serde_json::from_value(self.data)?)
     }
 }

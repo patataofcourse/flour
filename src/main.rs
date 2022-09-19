@@ -4,7 +4,6 @@ use flour::{
     error::{Error, Result},
     BCCAD, BRCAD,
 };
-use serde::Deserialize;
 use std::{
     fs::File,
     io::{Read, Write},
@@ -146,11 +145,11 @@ fn run() -> Result<()> {
             let mut out_file = File::create(&bxcad)?;
             match &bxcad_wrapper.bxcad_type {
                 BXCADType::BCCAD => {
-                    let bccad = BCCAD::deserialize(bxcad_wrapper.data)?;
+                    let bccad = bxcad_wrapper.to_bxcad::<BCCAD>()?;
                     bccad.to_binary(&mut out_file)?;
                 }
                 BXCADType::BRCAD => {
-                    let brcad = BRCAD::deserialize(bxcad_wrapper.data)?;
+                    let brcad = bxcad_wrapper.to_bxcad::<BRCAD>()?;
                     brcad.to_binary(&mut out_file)?;
                 }
                 BXCADType::Custom(_) => unimplemented!(),
