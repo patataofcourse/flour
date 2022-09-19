@@ -112,8 +112,10 @@ fn run() -> Result<()> {
                     let brcad = BRCAD::from_binary(&mut in_file)?;
                     BXCADWrapper::from_bxcad(brcad)
                 }
-                BXCADType::Custom(_) => Err(Error::NonImplementedFeature("custom BXCAD types"))?,
-                c => Err(Error::NonImplementedFeature(&format!("BXCAD type {:?}", c)))?,
+                BXCADType::Custom(_) => Err(Error::NonImplementedFeature(
+                    "custom BXCAD types".to_string(),
+                ))?,
+                c => Err(Error::NonImplementedFeature(format!("BXCAD type {:?}", c)))?,
             };
 
             let json_ = serde_json::to_string_pretty(&bxcad_wrapper)?;

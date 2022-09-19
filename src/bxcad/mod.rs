@@ -10,6 +10,8 @@ pub mod bccad;
 /// Everything related to the BRCAD format used in Rhythm Heaven Fever
 pub mod brcad;
 
+pub const OLDEST_SUPPORTED_VERSION: &'static str = "2.0.0-pre1";
+
 /// A trait that encapsulates the basics of the B_CAD or BXCAD formats,
 /// meant to be used for ease of (de)serializing
 pub trait BXCAD<'a>: Serialize + for<'de> Deserialize<'de> {
@@ -95,8 +97,11 @@ impl BXCADWrapper {
     }
     /// Return the wrapper's BXCAD data if compatible
     pub fn to_bxcad<'a, T: BXCAD<'a>>(self) -> Result<T> {
-        let requirement =
-            VersionReq::parse(&format!("<={}, >=2.0.0-0", env!("CARGO_PKG_VERSION")))?;
+        let requirement = VersionReq::parse(&format!(
+            "<={}, >={}",
+            env!("CARGO_PKG_VERSION"),
+            OLDEST_SUPPORTED_VERSION
+        ))?;
         let version = Version::parse(&self.flour_version)?; //TODO: add specific error
 
         if !requirement.matches(&version) {
