@@ -19,7 +19,9 @@ pub enum Error {
     #[error("Could not decode labels file from Shift-JIS!")]
     LabelsFileNotShiftJIS,
     #[error("Incompatible version {0}")]
-    IncompatibleVersion(semver::Version)
+    IncompatibleVersion(semver::Version),
+    #[error("File given is not a BXCAD file")]
+    NotBXCAD
 }
 
 impl From<std::io::Error> for Error {

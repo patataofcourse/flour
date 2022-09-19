@@ -8,66 +8,118 @@ use bytestream::{ByteOrder, StreamReader, StreamWriter};
 use serde::{Deserialize, Serialize};
 use std::io::{Read, Seek, Write};
 
+/// A representation of the contents of a BCCAD file
 #[derive(Serialize, Deserialize)]
 pub struct BCCAD {
+    /// Date of latest format revision, in YYYYMMDD format (decimal).
+    /// Known timestamp is 20131007 (Oct 7 2013)
     pub timestamp: Option<u32>,
+    /// Width of the associated texture in pixels. 1024 maximum by hardware limitation
     pub texture_width: u16,
+    /// Width of the associated texture in pixels. 1024 maximum by hardware limitation
     pub texture_height: u16,
+    /// [`Sprite`]s this BCCAD contains
     pub sprites: Vec<Sprite>,
+    /// [`Animation`]s that can be called for this BCCAD
     pub animations: Vec<Animation>,
 }
 
+/// A frame of a BCCAD animation, composed of several [`SpritePart`]s or cells
+/// aligned together to create a full picture
 #[derive(Serialize, Deserialize)]
 pub struct Sprite {
+    /// [`SpritePart`]s that form this Sprite
     pub parts: Vec<SpritePart>,
 }
 
+/// A small image taken directly from the texture sheet, which grouped with others
+/// creates a full frame of the animation, that is, a [`Sprite`]
 #[derive(Serialize, Deserialize)]
 pub struct SpritePart {
+    /// Struct that defines the bounds of the SpritePart in the texture itself
     pub texture_pos: PosInTexture,
+    /// X position where the part should be placed relative to the sprite
     pub pos_x: i16,
+    /// Y position where the part should be placed relative to the sprite
     pub pos_y: i16,
+    /// Scaling factor for the X axis
     pub scale_x: f32,
+    /// Scaling factor for the Y axis
     pub scale_y: f32,
+    /// Part rotation in degrees
     pub rotation: f32,
+    /// Whether to flip the part on the X axis
     pub flip_x: bool,
+    /// Whether to flip the part on the Y axis
     pub flip_y: bool,
+    /// A color to apply the multiply blending mode with for the
+    /// part in order to darken or tint it
     pub multiply_color: Color,
+    /// A color to apply the screen blending mode with for the
+    /// part in order to lighten it
     pub screen_color: Color,
+    /// Opacity for the part
     pub opacity: u8,
     pub unk1: [u8; 12],
+    /// Seems to identify certain parts for the code to apply effects or other
+    /// textures too, or use them as interactive pieces (see: Feed Goat game)
     pub designation_id: u8,
     pub unk2: u8,
+    /// Stereoscopic depth for the part
     pub depth: StereoDepth,
 }
 
+/// Stereoscopic depth in the four corners of a rectangle (on which a [`SpritePart`]
+/// is rendered)
 #[derive(Serialize, Deserialize)]
 pub struct StereoDepth {
+    /// Top-left corner
     pub top_left: f32,
+    /// Bottom-left corner
     pub bottom_left: f32,
+    /// Top-right corner
     pub top_right: f32,
+    /// Bottom-right corner
     pub bottom_right: f32,
 }
 
+/// A cell animation for BCCAD, composed of different frames/[`Sprite`]s
 #[derive(Serialize, Deserialize)]
 pub struct Animation {
+    /// The name of the animation. This is what the game refers to it by
     pub name: String,
+    /// Amount of interpolation used ???
     pub interpolation: i32,
+    /// List of [`AnimationStep`]s that constitute this Animation
     pub steps: Vec<AnimationStep>,
 }
 
+/// These constitute an [`Animation`], and are a reference to
+/// a [`Sprite`] plus more information about it relative to the
+/// whole animation
 #[derive(Serialize, Deserialize)]
 pub struct AnimationStep {
+    /// A reference to the index number of the [`Sprite`] this AnimationStep uses
     pub sprite: u16,
+    /// Duration of the frame (in unknown units, seems to have changeable speed)
     pub duration: u16,
+    /// X position the sprite is rendered to, relative to the animation
     pub pos_x: i16,
+    /// Y position the sprite is rendered to, relative to the animation
     pub pos_y: i16,
+    /// Stereoscopic depth applied to the whole [`Sprite`]
     pub depth: f32,
+    /// Scaling factor for the X axis
     pub scale_x: f32,
+    /// Scaling factor for the Y axis
     pub scale_y: f32,
+    /// Rotation in degrees
     pub rotation: f32,
+    /// A color to apply the multiply blending mode with for the
+    /// [`Sprite`] in order to darken or tint it
     pub multiply_color: Color,
     pub unk: [u8; 3],
+    /// Opacity for the sprite
     pub opacity: u16,
 }
 
@@ -249,19 +301,25 @@ impl BXCAD<'_> for BCCAD {
     }
 }
 impl BCCAD {
-    #[deprecated]
+    #[deprecated(
+        since = "2.0.0",
+        note = "use `BCCAD::from_binary` (`BXCAD` trait) instead"
+    )]
     pub fn from_bccad<F: Read + Seek>(f: &mut F) -> Result<Self> {
         Self::from_binary(f)
     }
-    #[deprecated]
+    #[deprecated(
+        since = "2.0.0",
+        note = "use `BCCAD::to_binary` (`BXCAD` trait) instead"
+    )]
     pub fn to_bccad<F: Write>(&self, f: &mut F) -> Result<()> {
         self.to_binary(f)
     }
-    #[deprecated]
+    #[deprecated(since = "2.0.0", note = "use `::serde_json::from_str` instead")]
     pub fn from_json(json: &str) -> Result<Self> {
         Ok(serde_json::from_str(json)?)
     }
-    #[deprecated]
+    #[deprecated(since = "2.0.0", note = "use `::serde_json::to_string_pretty` instead")]
     pub fn to_json(&self) -> Result<String> {
         Ok(serde_json::to_string_pretty(self)?)
     }

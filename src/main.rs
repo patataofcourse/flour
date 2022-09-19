@@ -113,6 +113,7 @@ fn run() -> Result<()> {
                     BXCADWrapper::from_bxcad(brcad)
                 }
                 BXCADType::Custom(_) => Err(Error::NonImplementedFeature("custom BXCAD types"))?,
+                c => Err(Error::NonImplementedFeature(&format!("BXCAD type {:?}", c)))?,
             };
 
             let json_ = serde_json::to_string_pretty(&bxcad_wrapper)?;
@@ -136,7 +137,8 @@ fn run() -> Result<()> {
                     p.set_extension(match &bxcad_wrapper.bxcad_type {
                         BXCADType::BCCAD => "bccad",
                         BXCADType::BRCAD => "brcad",
-                        BXCADType::Custom(_) => unimplemented!(),
+                        BXCADType::Custom(_) => todo!(),
+                        _ => unimplemented!(),
                     });
                     p
                 }
@@ -152,7 +154,8 @@ fn run() -> Result<()> {
                     let brcad = bxcad_wrapper.to_bxcad::<BRCAD>()?;
                     brcad.to_binary(&mut out_file)?;
                 }
-                BXCADType::Custom(_) => unimplemented!(),
+                BXCADType::Custom(_) => todo!(),
+                _ => unimplemented!(),
             }
             println!(
                 "Deserialized {:?} to {:?}",

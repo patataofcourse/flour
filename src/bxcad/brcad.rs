@@ -8,58 +8,97 @@ use encoding_rs::SHIFT_JIS;
 use serde::{Deserialize, Serialize};
 use std::io::{Read, Seek, Write};
 
+/// A representation of the contents of a BRCAD file
 #[derive(Serialize, Deserialize)]
 pub struct BRCAD {
+    /// Date of latest format revision, in YYYYMMDD format (decimal).
+    /// Known timestamp is 20100312 (Mar 12 2010)
     pub timestamp: Option<u32>,
     pub unk0: u32,
+    /// Number of the spritesheet to use in a specific
     pub spritesheet_num: u16,
+    /// ??????
     pub spritesheet_control: u16,
+    /// Width of the associated texture in pixels
     pub texture_width: u16,
+    /// Height of the associated texture in pixels
     pub texture_height: u16,
     pub unk1: u16,
+    /// [`Sprite`]s this BRCAD contains
     pub sprites: Vec<Sprite>,
     pub unk2: u16,
+    /// [`Animation`]s that can be called for this BRCAD
     pub animations: Vec<Animation>,
 }
 
+/// Struct that represents a labels file for a BRCAD file - just a bunch of #defines
 #[derive(Serialize, Deserialize)]
 pub struct BRCADLabels(pub Vec<String>);
 
+/// A frame of a BRCAD animation, composed of several [`SpritePart`]s or cells
+/// aligned together to create a full picture
 #[derive(Serialize, Deserialize)]
 pub struct Sprite {
     pub unk: u16,
+    /// [`SpritePart`]s that form this Sprite
     pub parts: Vec<SpritePart>,
 }
 
+/// A small image taken directly from the texture sheet, which grouped with others
+/// creates a full frame of the animation, that is, a [`Sprite`]
 #[derive(Serialize, Deserialize)]
 pub struct SpritePart {
+    /// Struct that defines the bounds of the SpritePart in the texture itself
     pub texture_pos: PosInTexture,
     pub unk: u32,
+    /// X position where the part should be placed relative to the sprite
     pub pos_x: u16,
+    /// Y position where the part should be placed relative to the sprite
     pub pos_y: u16,
+    /// Scaling factor for the X axis
     pub scale_x: f32,
+    /// Scaling factor for the Y axis
     pub scale_y: f32,
+    /// Part rotation in degrees
     pub rotation: f32,
+    /// Whether to flip the part on the X axis
     pub flip_x: bool,
+    /// Whether to flip the part on the Y axis
     pub flip_y: bool,
+    /// Opacity for the part
     pub opacity: u8,
 }
 
+/// A cell animation for BRCAD, composed of different frames/[`Sprite`]s
 #[derive(Serialize, Deserialize)]
 pub struct Animation {
+    /// The name of the animation. Defined in the labels file, this may be
+    /// missing from the struct if said file is not provided. **Do NOT change
+    /// the order of the animations, the name is just there for development
+    /// purposes**
     pub name: Option<String>,
     pub unk: u16,
+    /// List of [`AnimationStep`]s that constitute this Animation
     pub steps: Vec<AnimationStep>,
 }
 
+/// These constitute an [`Animation`], and are a reference to
+/// a [`Sprite`] plus more information about it relative to the
+/// whole animation
 #[derive(Serialize, Deserialize)]
 pub struct AnimationStep {
+    /// A reference to the index number of the [`Sprite`] this AnimationStep uses
     pub sprite: u16,
+    /// Duration of the frame (in unknown units, seems to have changeable speed)
     pub duration: u16,
     pub unk0: u32,
+    /// Scaling factor for the X axis
     pub scale_x: f32,
+    /// Scaling factor for the Y axis
     pub scale_y: f32,
+    /// Rotation in degrees
     pub rotation: f32,
+    /// Opacity for the sprite
     pub opacity: u8,
     pub unk1: [u8; 3],
 }
@@ -223,6 +262,7 @@ impl BXCAD<'_> for BRCAD {
 }
 
 impl BRCAD {
+    /// Uses the contents of the associated labels file to add names to the struct
     pub fn apply_labels<F: Read>(&mut self, labels: &mut F) -> Result<()> {
         let mut data = vec![];
         labels.read_to_end(&mut data)?;
