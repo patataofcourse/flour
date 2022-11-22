@@ -96,7 +96,7 @@ fn run() -> Result<()> {
             } else if is_brcad {
                 BXCADType::BRCAD
             } else {
-                bxcad::get_bxcad_type(&mut in_file)?
+                bxcad::get_bxcad_type(&mut in_file)?.ok_or(Error::NotBXCAD)?
             };
 
             if labels != None && bxcad_type != BXCADType::BRCAD {

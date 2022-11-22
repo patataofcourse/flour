@@ -18,7 +18,9 @@ pub struct Color {
     pub green: u8,
 }
 
-/// Variable length string - format is as follows:
+/// Variable length string, used in BCCAD labels
+/// 
+/// Format is as follows:
 ///
 /// * 1 byte for string size (n)
 /// * n bytes for string contents

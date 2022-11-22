@@ -10,9 +10,10 @@ pub mod bccad;
 /// Everything related to the BRCAD format used in Rhythm Heaven Fever
 pub mod brcad;
 
+/// Oldest supported BXCAD version by the current ver.
 pub const OLDEST_SUPPORTED_VERSION: &'static str = "2.0.0-pre1";
 
-/// A trait that encapsulates the basics of the B_CAD or BXCAD formats,
+/// A trait that encapsulates the basics of the BCAD / BXCAD formats,
 /// meant to be used for ease of (de)serializing
 pub trait BXCAD<'a>: Serialize + for<'de> Deserialize<'de> {
     /// Endianness of the file
@@ -54,15 +55,15 @@ pub enum BXCADType {
 }
 
 //TODO: get_bxcad_type_or_custom
-/// Returns the BXCAD type associated with the given file, or an error if none
-pub fn get_bxcad_type<'a, F: Read + Seek>(f: &mut F) -> Result<BXCADType> {
-    if bccad::BCCAD::is_format(f)? {
-        Ok(BXCADType::BCCAD)
+/// Returns the builtin BXCAD type associated with the given file, or an error if none
+pub fn get_bxcad_type<'a, F: Read + Seek>(f: &mut F) -> Result<Option<BXCADType>> {
+    Ok(if bccad::BCCAD::is_format(f)? {
+        Some(BXCADType::BCCAD)
     } else if brcad::BRCAD::is_format(f)? {
-        Ok(BXCADType::BRCAD)
+        Some(BXCADType::BRCAD)
     } else {
-        Err(Error::NotBXCAD)
-    }
+        None
+    })
 }
 
 /// Bounding box for a sprite part's texture in the texture sheet
