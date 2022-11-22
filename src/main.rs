@@ -112,9 +112,9 @@ fn run() -> Result<()> {
                     let brcad = BRCAD::from_binary(&mut in_file)?;
                     BXCADWrapper::from_bxcad(brcad)
                 }
-                BXCADType::Custom(_) => Err(Error::NonImplementedFeature(
-                    "custom BXCAD types".to_string(),
-                ))?,
+                //  BXCADType::Custom(_) => Err(Error::NonImplementedFeature(
+                //      "custom BXCAD types".to_string(),
+                //  ))?,
                 c => Err(Error::NonImplementedFeature(format!("BXCAD type {:?}", c)))?,
             };
 
@@ -139,7 +139,7 @@ fn run() -> Result<()> {
                     p.set_extension(match &bxcad_wrapper.bxcad_type {
                         BXCADType::BCCAD => "bccad",
                         BXCADType::BRCAD => "brcad",
-                        BXCADType::Custom(_) => todo!(),
+                        //  BXCADType::Custom(_) => todo!(),
                         _ => unimplemented!(),
                     });
                     p
@@ -156,7 +156,7 @@ fn run() -> Result<()> {
                     let brcad = bxcad_wrapper.to_bxcad::<BRCAD>()?;
                     brcad.to_binary(&mut out_file)?;
                 }
-                BXCADType::Custom(_) => todo!(),
+                //  BXCADType::Custom(_) => todo!(),
                 _ => unimplemented!(),
             }
             println!(

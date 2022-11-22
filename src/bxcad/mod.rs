@@ -46,16 +46,16 @@ pub enum BXCADType {
     BRCAD,
     /// BCCAD, used with Rhythm Heaven Megamix. See [`bccad`]
     BCCAD,
-    /// Any other BXCAD datatype supported by flour
-    //TODO: add timestamp and byteorder fields
-    Custom(
-        /// Identifier for the BXCAD datatype
-        String,
-    ),
+    //  /// Any other BXCAD datatype supported by flour
+    //  //TODO: add timestamp and byteorder fields
+    //  Custom(
+    //      /// Identifier for the BXCAD datatype
+    //      String,
+    //  ),
 }
 
 //TODO: get_bxcad_type_or_custom
-/// Returns the builtin BXCAD type associated with the given file, or an error if none
+/// Returns the builtin BXCAD type associated with the given file, if any
 pub fn get_bxcad_type<'a, F: Read + Seek>(f: &mut F) -> Result<Option<BXCADType>> {
     Ok(if bccad::BCCAD::is_format(f)? {
         Some(BXCADType::BCCAD)
