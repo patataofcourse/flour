@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 use std::io::{Read, Seek, Write};
 
 /// A representation of the contents of a BCCAD file
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct BCCAD {
     /// Date of latest format revision, in YYYYMMDD format (decimal).
     /// Known timestamp is 20131007 (Oct 7 2013)
@@ -26,7 +26,7 @@ pub struct BCCAD {
 
 /// A frame of a BCCAD animation, composed of several [`SpritePart`]s or cells
 /// aligned together to create a full picture
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct Sprite {
     /// [`SpritePart`]s that form this Sprite
     pub parts: Vec<SpritePart>,
@@ -34,7 +34,7 @@ pub struct Sprite {
 
 /// A small image taken directly from the texture sheet, which grouped with others
 /// creates a full frame of the animation, that is, a [`Sprite`]
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct SpritePart {
     /// Struct that defines the bounds of the SpritePart in the texture itself
     pub texture_pos: PosInTexture,
@@ -71,7 +71,7 @@ pub struct SpritePart {
 
 /// Stereoscopic depth in the four corners of a rectangle (on which a [`SpritePart`]
 /// is rendered)
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct StereoDepth {
     /// Top-left corner
     pub top_left: f32,
@@ -84,7 +84,7 @@ pub struct StereoDepth {
 }
 
 /// A cell animation for BCCAD, composed of different frames/[`Sprite`]s
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct Animation {
     /// The name of the animation. This is what the game refers to it by
     pub name: String,
@@ -97,7 +97,7 @@ pub struct Animation {
 /// These constitute an [`Animation`], and are a reference to
 /// a [`Sprite`] plus more information about it relative to the
 /// whole animation
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct AnimationStep {
     /// A reference to the index number of the [`Sprite`] this AnimationStep uses
     pub sprite: u16,
@@ -300,6 +300,7 @@ impl BXCAD<'_> for BCCAD {
         Ok(())
     }
 }
+
 impl BCCAD {
     #[deprecated(
         since = "2.0.0",

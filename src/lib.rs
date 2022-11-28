@@ -11,7 +11,7 @@ pub(crate) mod bytestream_addon;
 pub use bxcad::{bccad::BCCAD, brcad::BRCAD, BXCAD};
 
 /// Color in RGB form
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Color {
     pub red: u8,
     pub blue: u8,
@@ -19,7 +19,7 @@ pub struct Color {
 }
 
 /// Variable length string, used in BCCAD labels
-/// 
+///
 /// Format is as follows:
 ///
 /// * 1 byte for string size (n)

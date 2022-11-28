@@ -24,6 +24,7 @@ struct Cli {
 #[derive(Subcommand, Debug)]
 enum Command {
     /// Convert a BCCAD file into a manually editable JSON file
+    #[clap(aliases = &["serialise", "s"])]
     Serialize {
         #[clap(parse(from_os_str))]
         /// The B_CAD file to convert
@@ -31,31 +32,34 @@ enum Command {
         #[clap(parse(from_os_str))]
         /// Location of the JSON file to export (optional)
         json: Option<PathBuf>,
-        #[clap(short = 'c', long)]
+
         /// File is a BCCAD
+        #[clap(short = 'c', long)]
         is_bccad: bool,
-        #[clap(short = 'r', long, conflicts_with = "is-bccad")]
         /// File is a BRCAD
+        #[clap(short = 'r', long, conflicts_with = "is-bccad")]
         is_brcad: bool,
+        /// Automatically detect whether the file is a BRCAD or a BCCAD (default)
         #[clap(
             short = 'a',
             long,
             conflicts_with = "is-brcad",
             conflicts_with = "is-bccad"
         )]
-        /// Automatically detect whether the file is a BRCAD or a BCCAD (default)
         auto: bool,
-        #[clap(short, long, parse(from_os_str))]
+
         /// (BRCAD only) Adds labels from label file
+        #[clap(short, long, parse(from_os_str))]
         labels: Option<PathBuf>,
     },
     /// Convert a JSON file exported by flour back into a BCCAD
+    #[clap(aliases = &["deserialise", "d"])]
     Deserialize {
-        #[clap(parse(from_os_str))]
         /// The JSON file to convert
-        json: PathBuf,
         #[clap(parse(from_os_str))]
+        json: PathBuf,
         /// Location of the B_CAD file to export (optional)
+        #[clap(parse(from_os_str))]
         bxcad: Option<PathBuf>,
     },
 }

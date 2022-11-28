@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 use std::io::{Read, Seek, Write};
 
 /// A representation of the contents of a BRCAD file
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct BRCAD {
     /// Date of latest format revision, in YYYYMMDD format (decimal).
     /// Known timestamp is 20100312 (Mar 12 2010)
@@ -32,12 +32,12 @@ pub struct BRCAD {
 }
 
 /// Struct that represents a labels file for a BRCAD file - just a bunch of #defines
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct BRCADLabels(pub Vec<String>);
 
 /// A frame of a BRCAD animation, composed of several [`SpritePart`]s or cells
 /// aligned together to create a full picture
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct Sprite {
     pub unk: u16,
     /// [`SpritePart`]s that form this Sprite
@@ -46,7 +46,7 @@ pub struct Sprite {
 
 /// A small image taken directly from the texture sheet, which grouped with others
 /// creates a full frame of the animation, that is, a [`Sprite`]
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct SpritePart {
     /// Struct that defines the bounds of the SpritePart in the texture itself
     pub texture_pos: PosInTexture,
@@ -70,7 +70,7 @@ pub struct SpritePart {
 }
 
 /// A cell animation for BRCAD, composed of different frames/[`Sprite`]s
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct Animation {
     /// The name of the animation. Defined in the labels file, this may be
     /// missing from the struct if said file is not provided. **Do NOT change
@@ -85,7 +85,7 @@ pub struct Animation {
 /// These constitute an [`Animation`], and are a reference to
 /// a [`Sprite`] plus more information about it relative to the
 /// whole animation
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct AnimationStep {
     /// A reference to the index number of the [`Sprite`] this AnimationStep uses
     pub sprite: u16,

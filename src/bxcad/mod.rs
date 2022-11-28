@@ -11,7 +11,7 @@ pub mod bccad;
 pub mod brcad;
 
 /// Oldest supported BXCAD version by the current ver.
-pub const OLDEST_SUPPORTED_VERSION: &'static str = "2.0.0-pre1";
+pub const OLDEST_SUPPORTED_VERSION: &'static str = "2.0.0-pre2";
 
 /// A trait that encapsulates the basics of the BCAD / BXCAD formats,
 /// meant to be used for ease of (de)serializing
@@ -67,7 +67,7 @@ pub fn get_bxcad_type<'a, F: Read + Seek>(f: &mut F) -> Result<Option<BXCADType>
 }
 
 /// Bounding box for a sprite part's texture in the texture sheet
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct PosInTexture {
     pub x: u16,
     pub y: u16,
@@ -96,6 +96,7 @@ impl BXCADWrapper {
             data: serde_json::to_value(bxcad).unwrap(),
         }
     }
+
     /// Return the wrapper's BXCAD data if compatible
     pub fn to_bxcad<'a, T: BXCAD<'a>>(self) -> Result<T> {
         let requirement = VersionReq::parse(&format!(
