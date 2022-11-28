@@ -51,6 +51,9 @@ enum Command {
         /// (BRCAD only) Adds labels from label file
         #[clap(short, long, parse(from_os_str))]
         labels: Option<PathBuf>,
+        /// Display indexes next to the sprites
+        #[clap(short, long, alias = "indexise")]
+        indexize: bool,
     },
     /// Convert a JSON file exported by flour back into a BCCAD
     #[clap(aliases = &["deserialise", "d"])]
@@ -81,6 +84,7 @@ fn run() -> Result<()> {
             is_bccad,
             is_brcad,
             labels,
+            indexize,
             ..
         } => {
             let json = match json {
@@ -110,11 +114,11 @@ fn run() -> Result<()> {
             let bxcad_wrapper = match bxcad_type {
                 BXCADType::BCCAD => {
                     let bccad = BCCAD::from_binary(&mut in_file)?;
-                    BXCADWrapper::from_bxcad(bccad)
+                    BXCADWrapper::from_bxcad(bccad, indexize)
                 }
                 BXCADType::BRCAD => {
                     let brcad = BRCAD::from_binary(&mut in_file)?;
-                    BXCADWrapper::from_bxcad(brcad)
+                    BXCADWrapper::from_bxcad(brcad, indexize)
                 }
                 //  BXCADType::Custom(_) => Err(Error::NonImplementedFeature(
                 //      "custom BXCAD types".to_string(),
