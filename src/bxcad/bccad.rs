@@ -123,7 +123,7 @@ pub struct AnimationStep {
     pub opacity: u16,
 }
 
-impl BXCAD for BCCAD {
+impl<'de> BXCAD<'de> for BCCAD {
     const BYTE_ORDER: ByteOrder = ByteOrder::LittleEndian;
     const TIMESTAMP: u32 = 20131007;
     const BXCAD_TYPE: BXCADType = BXCADType::BCCAD;

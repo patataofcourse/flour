@@ -21,6 +21,10 @@ semver = "1.0.7"
 encoding_rs = "0.8"
 thiserror = "1.0"
 
+[[bin]]
+name = "flour"
+required-features = ["modder_qol"]
+
 [features]
 default = ["modder_qol"]
 modder_qol = []

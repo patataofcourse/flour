@@ -2,7 +2,6 @@ use crate::error::{Error, Result};
 use bytestream::{ByteOrder, StreamReader};
 use semver::{Version, VersionReq};
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
 use std::io::{Read, Seek, SeekFrom, Write};
 
 /// Everything related to the BCCAD format used in Rhythm Heaven Megamix
@@ -10,16 +9,23 @@ pub mod bccad;
 /// Everything related to the BRCAD format used in Rhythm Heaven Fever
 pub mod brcad;
 
-/// Everything relevant to "indexization", that 
+/// QoL features for the JSON format
 #[cfg(feature = "modder_qol")]
 pub mod qol;
+
+#[cfg(feature = "modder_qol")]
+use qol::QoL;
+
+#[cfg(not(feature = "modder_qol"))]
+#[allow(unused)]
+use std::convert::Infallible as QoL;
 
 /// Oldest supported BXCAD version by the current ver.
 pub const OLDEST_SUPPORTED_VERSION: &'static str = "2.0.0-pre2";
 
 /// A trait that encapsulates the basics of the BCAD / BXCAD formats,
 /// meant to be used for ease of (de)serializing
-pub trait BXCAD: Serialize + for<'de> Deserialize<'de> {
+pub trait BXCAD<'de>: Serialize + Deserialize<'de> {
     /// Endianness of the file
     const BYTE_ORDER: ByteOrder;
     /// Last revision timestamp - used to identify different versions
@@ -81,39 +87,39 @@ pub struct PosInTexture {
 
 /// A wrapper that contains data about the BXCAD file, meant to be used
 /// with serializing/deserializing (see the flour main executable)
-#[derive(Serialize, Deserialize)]
-pub struct BXCADWrapper {
+#[derive(Serialize)]
+pub struct BXCADWrapper<X: for<'de> BXCAD<'de>> {
     /// Type of the BXCAD file
     pub bxcad_type: BXCADType,
     /// flour version that was used to create this file (SemVer)
     pub flour_version: String,
-    /// Whether or not to switch the lists for HashMaps, so index can be displayed
-    /// next to the sprites
-    pub indexize: bool,
-    /// Actual BXCAD data as a serde value
-    pub data: Value,
+    /// QoL options existing in the JSON file
+    pub qol: Option<QoL>,
+    // TODO: trait?
+    /// Actual BXCAD data
+    pub data: X,
 }
 
-impl BXCADWrapper {
+impl<X: for<'de> BXCAD<'de>> BXCADWrapper<X> {
     /// Create a BXCADWrapper from the given BXCAD struct.
     ///
     /// To see the meaning of `indexize`, see [BXCADWrapper::indexize]
-    pub fn from_bxcad<T: BXCAD>(bxcad: T, indexize: bool) -> Self {
+    pub fn from_bxcad(bxcad: X) -> Self {
         Self {
-            bxcad_type: T::BXCAD_TYPE,
+            bxcad_type: X::BXCAD_TYPE,
             flour_version: env!("CARGO_PKG_VERSION").to_string(),
-            indexize,
-            data: if indexize {
-                //bxcad.to_indexized()
-                todo!();
-            } else {
-                serde_json::to_value(bxcad).unwrap()
-            },
+            qol: None,
+            data: bxcad,
         }
     }
 
+    #[cfg(feature = "modder_qol")]
+    pub fn from_bxcad_with_qol<Q: for<'de>BXCAD<'de>>(bxcad: X, qol: QoL) -> BXCADWrapper<Q> {
+        qol::bxcad_wrapper(bxcad, qol)
+    }
+
     /// Return the wrapper's BXCAD data if compatible
-    pub fn to_bxcad<T: BXCAD>(self) -> Result<T> {
+    pub fn to_bxcad(self) -> Result<X> {
         let requirement = VersionReq::parse(&format!(
             "<={}, >={}",
             env!("CARGO_PKG_VERSION"),
@@ -126,12 +132,12 @@ impl BXCADWrapper {
             return Err(Error::IncompatibleVersion(version));
         }
 
-        if self.indexize {
+        if let Some(q) = self.qol {
             //Ok(T::from_indexized(self.data)?)
             todo!();
         } else {
             //TODO: this might false-positive some bxcads
-            Ok(serde_json::from_value(self.data)?)
+            Ok(self.data)
         }
     }
 }
