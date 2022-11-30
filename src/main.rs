@@ -1,6 +1,10 @@
 use clap::{Parser, Subcommand};
 use flour::{
-    bxcad::{self, BXCADType, BXCADWrapper, BXCAD},
+    bxcad::{
+        self,
+        qol::{IndexizedBCCAD, IndexizedBRCAD},
+        BXCADType, BXCADWrapper, BXCAD,
+    },
     error::{Error, Result},
     BCCAD, BRCAD,
 };
@@ -158,9 +162,9 @@ fn run() -> Result<()> {
             in_file.read_to_string(&mut json_)?;
             let value_wrapper: Value = serde_json::from_str(&json_)?;
 
-            let Some(bxcad_type) = value_wrapper.get("value") else {Err(Error::NotFlour)?};
+            let Some(bxcad_type) = value_wrapper.get("bxcad_type") else {Err(Error::NotFlour)?};
             let Some(bxcad_type) = bxcad_type.as_str() else {Err(Error::NotFlour)?};
-            let bxcad_type: BXCADType = serde_json::from_str(bxcad_type)?;
+            let bxcad_type: BXCADType = serde_json::from_str(&format!("\"{}\"", bxcad_type))?;
 
             let bxcad = match bxcad {
                 Some(c) => c,
@@ -176,16 +180,35 @@ fn run() -> Result<()> {
                 }
             };
 
+            let indexized = if let Some(bxcad_type) = value_wrapper.get("indexize") {
+                let Some(c) = bxcad_type.as_bool() else {Err(Error::NotFlour)?};
+                c
+            } else {
+                false
+            };
+
             let mut out_file = File::create(&bxcad)?;
             match bxcad_type {
                 BXCADType::BCCAD => {
-                    let bxcad_wrapper: BXCADWrapper<BCCAD> = serde_json::from_str(&json_)?;
-                    let bccad = bxcad_wrapper.to_bxcad()?;
+                    let bccad = if indexized {
+                        let bxcad_wrapper: BXCADWrapper<IndexizedBCCAD> =
+                            serde_json::from_str(&json_)?;
+                        bxcad_wrapper.indexized_to_bxcad()?
+                    } else {
+                        let bxcad_wrapper: BXCADWrapper<BCCAD> = serde_json::from_str(&json_)?;
+                        bxcad_wrapper.to_bxcad()?
+                    };
                     bccad.to_binary(&mut out_file)?;
                 }
                 BXCADType::BRCAD => {
-                    let bxcad_wrapper: BXCADWrapper<BRCAD> = serde_json::from_str(&json_)?;
-                    let brcad = bxcad_wrapper.to_bxcad()?;
+                    let brcad = if indexized {
+                        let bxcad_wrapper: BXCADWrapper<IndexizedBRCAD> =
+                            serde_json::from_str(&json_)?;
+                        bxcad_wrapper.indexized_to_bxcad()?
+                    } else {
+                        let bxcad_wrapper: BXCADWrapper<BRCAD> = serde_json::from_str(&json_)?;
+                        bxcad_wrapper.to_bxcad()?
+                    };
                     brcad.to_binary(&mut out_file)?;
                 }
                 //  BXCADType::Custom(_) => todo!(),

@@ -4,6 +4,8 @@ use semver::{Version, VersionReq};
 use serde::{Deserialize, Serialize};
 use std::io::{Read, Seek, SeekFrom, Write};
 
+use self::qol::Indexizable;
+
 /// Everything related to the BCCAD format used in Rhythm Heaven Megamix
 pub mod bccad;
 /// Everything related to the BRCAD format used in Rhythm Heaven Fever
@@ -121,17 +123,28 @@ impl<X: for<'de> BXCAD<'de>> BXCADWrapper<X> {
             return Err(Error::IncompatibleVersion(version));
         }
 
-        if self.indexize == true {
-            if cfg!(not(feature = "modder_qol")) {
-                todo!("ERROR HERE")
-            } else {
-                //Ok(T::from_indexized(self.data)?)
-                todo!();
-            }
-        } else {
-            //TODO: this might false-positive some bxcads
-            Ok(self.data)
+        //TODO: this might false-positive some bxcads
+        Ok(self.data)
+    }
+}
+
+impl<I> BXCADWrapper<I> {
+    /// Return the wrapper's BXCAD data if compatible
+    pub fn indexized_to_bxcad<X: Indexizable<Indexized = I>>(self) -> Result<X> {
+        let requirement = VersionReq::parse(&format!(
+            "<={}, >={}",
+            env!("CARGO_PKG_VERSION"),
+            OLDEST_SUPPORTED_VERSION
+        ))?;
+        let version = Version::parse(&self.flour_version)?; //TODO: add specific error
+
+        if !requirement.matches(&version) {
+            //TODO: add specific error
+            return Err(Error::IncompatibleVersion(version));
         }
+
+        //TODO: this might false-positive some bxcads
+        Ok(X::from_indexized(self.data))
     }
 }
 
