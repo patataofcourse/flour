@@ -13,15 +13,8 @@ pub mod brcad;
 #[cfg(feature = "modder_qol")]
 pub mod qol;
 
-#[cfg(feature = "modder_qol")]
-use qol::QoL;
-
-#[cfg(not(feature = "modder_qol"))]
-#[allow(unused)]
-use std::convert::Infallible as QoL;
-
 /// Oldest supported BXCAD version by the current ver.
-pub const OLDEST_SUPPORTED_VERSION: &'static str = "2.0.0-pre2";
+pub const OLDEST_SUPPORTED_VERSION: &'static str = "2.0.0-pre1";
 
 /// A trait that encapsulates the basics of the BCAD / BXCAD formats,
 /// meant to be used for ease of (de)serializing
@@ -87,17 +80,18 @@ pub struct PosInTexture {
 
 /// A wrapper that contains data about the BXCAD file, meant to be used
 /// with serializing/deserializing (see the flour main executable)
-#[derive(Serialize)]
-pub struct BXCADWrapper<X: for<'de> BXCAD<'de>> {
+#[derive(Serialize, Deserialize)]
+#[non_exhaustive]
+pub struct BXCADWrapper<X> {
     /// Type of the BXCAD file
     pub bxcad_type: BXCADType,
     /// flour version that was used to create this file (SemVer)
     pub flour_version: String,
     /// QoL options existing in the JSON file
-    pub qol: Option<QoL>,
-    // TODO: trait?
+    #[serde(default)]
+    pub indexize: bool,
     /// Actual BXCAD data
-    pub data: X,
+    data: X,
 }
 
 impl<X: for<'de> BXCAD<'de>> BXCADWrapper<X> {
@@ -108,14 +102,9 @@ impl<X: for<'de> BXCAD<'de>> BXCADWrapper<X> {
         Self {
             bxcad_type: X::BXCAD_TYPE,
             flour_version: env!("CARGO_PKG_VERSION").to_string(),
-            qol: None,
+            indexize: false,
             data: bxcad,
         }
-    }
-
-    #[cfg(feature = "modder_qol")]
-    pub fn from_bxcad_with_qol<Q: for<'de>BXCAD<'de>>(bxcad: X, qol: QoL) -> BXCADWrapper<Q> {
-        qol::bxcad_wrapper(bxcad, qol)
     }
 
     /// Return the wrapper's BXCAD data if compatible
@@ -132,12 +121,29 @@ impl<X: for<'de> BXCAD<'de>> BXCADWrapper<X> {
             return Err(Error::IncompatibleVersion(version));
         }
 
-        if let Some(q) = self.qol {
-            //Ok(T::from_indexized(self.data)?)
-            todo!();
+        if self.indexize == true {
+            if cfg!(not(feature = "modder_qol")) {
+                todo!("ERROR HERE")
+            } else {
+                //Ok(T::from_indexized(self.data)?)
+                todo!();
+            }
         } else {
             //TODO: this might false-positive some bxcads
             Ok(self.data)
+        }
+    }
+}
+
+#[cfg(feature = "modder_qol")]
+impl<X: qol::Indexizable> BXCADWrapper<X> {
+    pub fn from_bxcad_indexize(bxcad: X) -> BXCADWrapper<X::Indexized> {
+        let data = bxcad.to_indexized();
+        BXCADWrapper {
+            bxcad_type: X::BXCAD_TYPE,
+            flour_version: env!("CARGO_PKG_VERSION").to_string(),
+            indexize: true,
+            data,
         }
     }
 }

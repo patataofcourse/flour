@@ -43,6 +43,10 @@ pub enum Error {
     /// File is not a BXCAD
     #[error("File given is not a known BXCAD file")]
     NotBXCAD,
+
+    /// File is not a flour JSON
+    #[error("File given is not a flour JSON file")]
+    NotFlour,
 }
 
 impl From<std::io::Error> for Error {

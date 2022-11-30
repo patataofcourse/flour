@@ -1,16 +1,10 @@
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
-use crate::{BXCAD, bxcad::{bccad, brcad, BXCADWrapper}};
+use crate::{
+    bxcad::{bccad, brcad},
+    BXCAD,
+};
 use std::collections::BTreeMap;
-
-#[derive(Serialize, Deserialize, Clone)]
-pub struct QoL {
-    pub indexize: bool,
-}
-
-pub fn bxcad_wrapper<X: for<'de> BXCAD<'de>, Q: for <'de>BXCAD<'de>>(bxcad: X, qol: QoL) -> BXCADWrapper<Q> {
-    todo!();
-}
 
 pub trait Indexizable: for<'de> BXCAD<'de> {
     type Indexized;
@@ -24,7 +18,7 @@ pub struct IndexizedBCCAD {
     pub texture_width: u16,
     pub texture_height: u16,
     pub sprites: BTreeMap<u16, bccad::Sprite>,
-    pub animations: Vec<bccad::Animation>
+    pub animations: Vec<bccad::Animation>,
 }
 
 impl Indexizable for bccad::BCCAD {
@@ -41,7 +35,39 @@ impl Indexizable for bccad::BCCAD {
             texture_width: self.texture_width,
             texture_height: self.texture_height,
             sprites,
-            animations: self.animations
+            animations: self.animations,
+        }
+    }
+
+    fn from_indexized(og: Self::Indexized) -> Self {
+        todo!();
+    }
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+pub struct IndexizedBRCAD {
+    pub timestamp: Option<u32>,
+    pub texture_width: u16,
+    pub texture_height: u16,
+    pub sprites: BTreeMap<u16, brcad::Sprite>,
+    pub animations: Vec<brcad::Animation>,
+}
+
+impl Indexizable for brcad::BRCAD {
+    type Indexized = IndexizedBRCAD;
+    fn to_indexized(self) -> Self::Indexized {
+        let mut sprites = BTreeMap::new();
+
+        for (i, sprite) in self.sprites.iter().enumerate() {
+            sprites.insert(i as u16, sprite.clone());
+        }
+
+        IndexizedBRCAD {
+            timestamp: self.timestamp,
+            texture_width: self.texture_width,
+            texture_height: self.texture_height,
+            sprites,
+            animations: self.animations,
         }
     }
 

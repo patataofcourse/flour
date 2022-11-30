@@ -4,6 +4,7 @@ use flour::{
     error::{Error, Result},
     BCCAD, BRCAD,
 };
+use serde_json::Value;
 use std::{
     fs::File,
     io::{Read, Write},
@@ -111,22 +112,39 @@ fn run() -> Result<()> {
                 Err(Error::LabelsOnNotBRCAD)?
             }
 
-            let bxcad_wrapper = match bxcad_type {
+            let json_ = match bxcad_type {
                 BXCADType::BCCAD => {
                     let bccad = BCCAD::from_binary(&mut in_file)?;
-                    BXCADWrapper::from_bxcad(bccad, indexize)
+                    if indexize {
+                        let wrapper = BXCADWrapper::from_bxcad_indexize(bccad);
+                        serde_json::to_string_pretty(&wrapper)
+                    } else {
+                        let wrapper = BXCADWrapper::from_bxcad(bccad);
+                        serde_json::to_string_pretty(&wrapper)
+                    }
                 }
                 BXCADType::BRCAD => {
-                    let brcad = BRCAD::from_binary(&mut in_file)?;
-                    BXCADWrapper::from_bxcad(brcad, indexize)
+                    let mut brcad = BRCAD::from_binary(&mut in_file)?;
+                    if let Some(c) = labels {
+                        let mut labels_file = File::open(c)?;
+                        brcad.apply_labels(&mut labels_file)?;
+                    }
+                    if indexize {
+                        let wrapper = BXCADWrapper::from_bxcad_indexize(brcad);
+
+                        serde_json::to_string_pretty(&wrapper)
+                    } else {
+                        let wrapper = BXCADWrapper::from_bxcad(brcad);
+
+                        serde_json::to_string_pretty(&wrapper)
+                    }
                 }
                 //  BXCADType::Custom(_) => Err(Error::NonImplementedFeature(
                 //      "custom BXCAD types".to_string(),
                 //  ))?,
                 c => Err(Error::NonImplementedFeature(format!("BXCAD type {:?}", c)))?,
-            };
+            }?;
 
-            let json_ = serde_json::to_string_pretty(&bxcad_wrapper)?;
             writeln!(out_file, "{}", json_)?;
             println!(
                 "Serialized {:?} to {:?}",
@@ -138,13 +156,17 @@ fn run() -> Result<()> {
             let mut in_file = File::open(&json)?;
             let mut json_ = String::new();
             in_file.read_to_string(&mut json_)?;
-            let bxcad_wrapper: BXCADWrapper = serde_json::from_str(&json_)?;
+            let value_wrapper: Value = serde_json::from_str(&json_)?;
+
+            let Some(bxcad_type) = value_wrapper.get("value") else {Err(Error::NotFlour)?};
+            let Some(bxcad_type) = bxcad_type.as_str() else {Err(Error::NotFlour)?};
+            let bxcad_type: BXCADType = serde_json::from_str(bxcad_type)?;
 
             let bxcad = match bxcad {
                 Some(c) => c,
                 None => {
                     let mut p = json.clone();
-                    p.set_extension(match &bxcad_wrapper.bxcad_type {
+                    p.set_extension(match &bxcad_type {
                         BXCADType::BCCAD => "bccad",
                         BXCADType::BRCAD => "brcad",
                         //  BXCADType::Custom(_) => todo!(),
@@ -155,13 +177,15 @@ fn run() -> Result<()> {
             };
 
             let mut out_file = File::create(&bxcad)?;
-            match &bxcad_wrapper.bxcad_type {
+            match bxcad_type {
                 BXCADType::BCCAD => {
-                    let bccad = bxcad_wrapper.to_bxcad::<BCCAD>()?;
+                    let bxcad_wrapper: BXCADWrapper<BCCAD> = serde_json::from_str(&json_)?;
+                    let bccad = bxcad_wrapper.to_bxcad()?;
                     bccad.to_binary(&mut out_file)?;
                 }
                 BXCADType::BRCAD => {
-                    let brcad = bxcad_wrapper.to_bxcad::<BRCAD>()?;
+                    let bxcad_wrapper: BXCADWrapper<BRCAD> = serde_json::from_str(&json_)?;
+                    let brcad = bxcad_wrapper.to_bxcad()?;
                     brcad.to_binary(&mut out_file)?;
                 }
                 //  BXCADType::Custom(_) => todo!(),
