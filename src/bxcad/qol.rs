@@ -6,12 +6,20 @@ use crate::{
 };
 use std::collections::BTreeMap;
 
+/// Trait for BXCAD types that allow "indexization", that is, conversion for their `Sprite` lists
+/// from a Vec to some sort of Map (usually BTreeMap<uint, Sprite>)
 pub trait Indexizable: for<'de> BXCAD<'de> {
+    /// The type that contains indexized data for this BXCAD
     type Indexized;
+    /// Convert a standard BXCAD to indexized
     fn to_indexized(self) -> Self::Indexized;
+    /// Convert the indexized data to a standard BXCAD
     fn from_indexized(og: Self::Indexized) -> Self;
 }
 
+/// [Indexizable::Indexized] variant of [crate::BCCAD]
+/// 
+/// See that type for more information
 #[derive(Serialize, Deserialize, Clone)]
 pub struct IndexizedBCCAD {
     pub timestamp: Option<u32>,
@@ -60,6 +68,10 @@ impl Indexizable for bccad::BCCAD {
     }
 }
 
+
+/// [Indexizable::Indexized] variant of [crate::BRCAD]
+/// 
+/// See that type for more information
 #[derive(Serialize, Deserialize, Clone)]
 pub struct IndexizedBRCAD {
     pub timestamp: Option<u32>,

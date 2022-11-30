@@ -1,3 +1,31 @@
+//! A crate with data types for known BXCAD (BRCAD/BCCAD) formats
+//! 
+//! # Obtaining and working with BXCAD formats
+//! In order to parse a BXCAD file's data, you must use the methods implemented in the [BXCAD] trait.
+//! 
+//! **Example:**
+//! ```no_run
+//! use std::fs::File;
+//! use flour::{BCCAD, BXCAD};
+//! # fn main() -> Result<(), flour::error::Error> {
+//! 
+//! // Open a BCCAD file
+//! let mut file = File::open("file.bccad")?;
+//! let mut bccad = BCCAD::from_binary(&mut file)?;
+//! 
+//! // Delete all animations, and save as a new file
+//! bccad.animations = vec![];
+//! let mut out_file = File::create("file.out.bccad")?;
+//! bccad.to_binary(&mut out_file)?;
+//! # Ok(())
+//! # }
+//! ```
+//! 
+//! # JSON (de)serializing and BXCADWrapper
+//! 
+//! # Features
+//! * **`modder_qol`**
+
 use serde::{Deserialize, Serialize};
 
 /// Contains a model for the generic BXCAD format, as well as

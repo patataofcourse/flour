@@ -128,8 +128,9 @@ impl<X: for<'de> BXCAD<'de>> BXCADWrapper<X> {
     }
 }
 
+#[cfg(feature = "modder_qol")]
 impl<I> BXCADWrapper<I> {
-    /// Return the wrapper's BXCAD data if compatible
+    /// Return the wrapper's BXCAD data, deindexized, if compatible
     pub fn indexized_to_bxcad<X: Indexizable<Indexized = I>>(self) -> Result<X> {
         let requirement = VersionReq::parse(&format!(
             "<={}, >={}",
@@ -150,6 +151,7 @@ impl<I> BXCADWrapper<I> {
 
 #[cfg(feature = "modder_qol")]
 impl<X: qol::Indexizable> BXCADWrapper<X> {
+    /// Create a [BXCADWrapper] for the BXCAD that applies [Indexizable::to_indexized]
     pub fn from_bxcad_indexize(bxcad: X) -> BXCADWrapper<X::Indexized> {
         let data = bxcad.to_indexized();
         BXCADWrapper {
