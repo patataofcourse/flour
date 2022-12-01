@@ -1,20 +1,3 @@
-//! # BCCAD file specification
-//! 
-//! **Little endian** file format. Known revision has a timestamp of **20131007** (7 Oct 2013)
-//! 
-//! **Main structure**:
-//! 
-//! | Size              | Name                  | Description                                   |
-//! |-------------------|-----------------------|-----------------------------------------------|
-//! | [u32] (4 bytes)   | Timestamp             | Date of last format revision                  |
-//! | [u16] (2 bytes)   | Texture width         | Width of the image this BCCAD refers to       |
-//! | [u16]             | Texture height        | Height of the image this BCCAD refers to      |
-//! | [u32]             | Number of sprites     | Number of "sprites" or frames in the BCCAD    |
-//! | XX bytes / sprite | Sprites               | List of BCCAD sprites (see below)             |
-//! | [u32]             | Number of animations  | Number of animations in the BCCAD             |
-//! | XX bytes / anim   | Animations            | List of BCCAD animations (see below)          |
-//!
-
 use crate::{
     bxcad::{BXCADType, PosInTexture, BXCAD},
     bytestream_addon::ByteStream,

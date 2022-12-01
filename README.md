@@ -6,3 +6,6 @@
 [![Documentation](https://img.shields.io/badge/docs.rs-v1.0-brightgreen)](https://docs.rs/flour/)
 
 Serializes and deserializes BCCAD / BRCAD files to and from JSON
+
+## Resources
+A WIP specification of BCCAD and BRCAD (known revisions from their respective Rhythm Heaven games) can be found in [SPECIFICATION.md](./SPECIFICATION.md)
