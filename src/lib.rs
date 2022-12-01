@@ -38,7 +38,7 @@ pub(crate) mod bytestream_addon;
 
 pub use bxcad::{bccad::BCCAD, brcad::BRCAD, BXCAD};
 
-/// Color in RGB form
+/// RGB color
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Color {
     pub red: u8,
