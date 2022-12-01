@@ -19,8 +19,8 @@
 
 | Size          | Name                  | Description                                   |
 |---------------|-----------------------|-----------------------------------------------|
-| u32 (4 bytes) | Timestamp             | Date of last format revision                  |
-| u16 (2 bytes) | Texture width         | Width of the image this BCCAD refers to       |
+| u32  | Timestamp             | Date of last format revision                  |
+| u16  | Texture width         | Width of the image this BCCAD refers to       |
 | u16           | Texture height        | Height of the image this BCCAD refers to      |
 | u32           | Number of sprites     | Number of "sprites" or frames in the BCCAD    |
 | Variable size | Sprites               | List of BCCAD sprites (see below)             |
@@ -44,16 +44,16 @@ Each sprite part has the following structure:
 | u16   | Texture Y | Y position of the image in the texture sheet (top-left corner) |
 | u16   | Texture width | Width of the image in the texture sheet |
 | u16   | Texture height | Height of the image in the texture sheet |
-| s16 (2 bytes, signed) | X position | X position of the image in the sprite |
+| s16 | X position | X position of the image in the sprite |
 | s16 | Y position | Y position of the image in the sprite |
-| f32 / `float` (4 bytes) | Scale (X axis) | Scaling factor for the X axis |
+| f32 / `float`  | Scale (X axis) | Scaling factor for the X axis |
 | f32 | Scale (Y axis) | Scaling factor for the Y axis
 | f32 | Rotation | Rotation of the sprite part (in degrees) |
-| bool (1 byte) | Flip X | If true, flip part on X axis |
-| bool (1 byte) | Flip Y | If true, flip part on Y axis |
+| bool  | Flip X | If true, flip part on X axis |
+| bool  | Flip Y | If true, flip part on Y axis |
 | RGB color | Multiply color | Color that will be layered to the sprite with the multiply blending mode |
 | RGB color | Screen color | Color that will be layered to the sprite with the screen blending mode |
-| u8 (1 byte) | Opacity | Global opacity for the sprite part |
+| u8  | Opacity | Global opacity for the sprite part |
 | 12 bytes | Unknown / reserved | Always 0? |
 | u8 | Designation ID | Used by the game to apply certain properties to it
 | 1 byte | Unknown | Always 0, if it wasn't unaligned I'd say padding |
