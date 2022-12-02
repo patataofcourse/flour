@@ -5,7 +5,9 @@
 [![Crates.io](https://img.shields.io/badge/crates.io-v1.0-brightgreen)](https://crates.io/crates/flour/)
 [![Documentation](https://img.shields.io/badge/docs.rs-v1.0-brightgreen)](https://docs.rs/flour/)
 
-Serializes and deserializes BCCAD / BRCAD files to and from JSON
+A crate that serializes and deserializes BCCAD / BRCAD files to and from a JSON format, with a library crate to parse these files
+
+flour uses JSON with added support for `// single-line comments` and `/* multi-line comments */`.
 
 ## Resources
 A WIP specification of BCCAD and BRCAD (known revisions from their respective Rhythm Heaven games) can be found in [SPECIFICATION.md](./SPECIFICATION.md)
