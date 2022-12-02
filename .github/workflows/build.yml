@@ -40,7 +40,7 @@ jobs:
         path: ${{runner.workspace}}/flour/target/release/flour.exe
   macos:
     name: Mac
-    runs-on: macos-latest
+    runs-on: macos-11
 
     steps:
     - uses: actions/checkout@v2
