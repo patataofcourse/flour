@@ -8,6 +8,7 @@ use flour::{
     error::{Error, Result},
     BCCAD, BRCAD,
 };
+use json_comments::{CommentSettings, StripComments};
 use serde_json::Value;
 use std::{
     fs::File,
@@ -72,14 +73,7 @@ enum Command {
     },
 }
 
-fn main() {
-    match run() {
-        Ok(_) => {}
-        Err(e) => eprintln!("ERROR: {}", e),
-    }
-}
-
-fn run() -> Result<()> {
+fn main() -> Result<()> {
     let cli = Cli::parse();
 
     match cli.command {
@@ -157,9 +151,11 @@ fn run() -> Result<()> {
             );
         }
         Command::Deserialize { json, bxcad } => {
-            let mut in_file = File::open(&json)?;
+            let in_file = File::open(&json)?;
+            let mut stripped = StripComments::with_settings(CommentSettings::c_style(), in_file);
+
             let mut json_ = String::new();
-            in_file.read_to_string(&mut json_)?;
+            stripped.read_to_string(&mut json_)?;
             let value_wrapper: Value = serde_json::from_str(&json_)?;
 
             let Some(bxcad_type) = value_wrapper.get("bxcad_type") else {Err(Error::NotFlour)?};

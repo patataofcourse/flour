@@ -18,7 +18,7 @@ pub trait Indexizable: for<'de> BXCAD<'de> {
 }
 
 /// [Indexizable::Indexized] variant of [crate::BCCAD]
-/// 
+///
 /// See that type for more information
 #[derive(Serialize, Deserialize, Clone)]
 pub struct IndexizedBCCAD {
@@ -68,9 +68,8 @@ impl Indexizable for bccad::BCCAD {
     }
 }
 
-
 /// [Indexizable::Indexized] variant of [crate::BRCAD]
-/// 
+///
 /// See that type for more information
 #[derive(Serialize, Deserialize, Clone)]
 pub struct IndexizedBRCAD {
@@ -115,7 +114,10 @@ impl Indexizable for brcad::BRCAD {
         for i in 0..=*og.sprites.keys().max().unwrap() {
             let sprite = match og.sprites.get(&i) {
                 Some(c) => c.clone(),
-                None => brcad::Sprite { parts: vec![], unk: 0 },
+                None => brcad::Sprite {
+                    parts: vec![],
+                    unk: 0,
+                },
             };
             sprites.push(sprite);
         }

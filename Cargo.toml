@@ -10,12 +10,17 @@ license = "LGPL-3"
 repository = "https://github.com/patataofcourse/flour.git"
 
 [dependencies]
+bytestream = "0.4.0"
+
 serde = { version = "1.0.136", features = ["derive"] }
 serde_json = "1.0.79"
-bytestream = "0.4.0"
-clap = { version = "3.1.6", features = ["derive"], optional = true }
-serde-semver = "0.2.1"
+json_comments = "0.2"
+
 semver = "1.0.7"
+serde-semver = "0.2.1"
+
+clap = { version = "3.1.6", features = ["derive"], optional = true }
+
 encoding_rs = "0.8"
 thiserror = "1.0"
 
