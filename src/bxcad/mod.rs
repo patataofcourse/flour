@@ -16,7 +16,7 @@ pub mod brcad;
 pub mod qol;
 
 /// Oldest supported BXCAD version by the current ver.
-pub const OLDEST_SUPPORTED_VERSION: &'static str = "2.0.0-pre1";
+pub const OLDEST_SUPPORTED_VERSION: &str = "2.0.0-pre1";
 
 /// A trait that encapsulates the basics of the BCAD / BXCAD formats,
 /// meant to be used for ease of (de)serializing
@@ -61,7 +61,7 @@ pub enum BXCADType {
 
 //TODO: get_bxcad_type_or_custom
 /// Returns the builtin BXCAD type associated with the given file, if any
-pub fn get_bxcad_type<'a, F: Read + Seek>(f: &mut F) -> Result<Option<BXCADType>> {
+pub fn get_bxcad_type<F: Read + Seek>(f: &mut F) -> Result<Option<BXCADType>> {
     Ok(if bccad::BCCAD::is_format(f)? {
         Some(BXCADType::BCCAD)
     } else if brcad::BRCAD::is_format(f)? {

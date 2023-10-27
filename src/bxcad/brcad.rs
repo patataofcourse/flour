@@ -170,7 +170,7 @@ impl<'de> BXCAD<'de> for BRCAD {
                 let rotation = f32::read_from(f, Self::BYTE_ORDER)?;
                 let opacity = u8::read_from(f, Self::BYTE_ORDER)?;
                 let mut unk1 = [0u8; 3];
-                f.read(&mut unk1)?;
+                f.read_exact(&mut unk1)?;
 
                 steps.push(AnimationStep {
                     sprite,
@@ -237,7 +237,7 @@ impl<'de> BXCAD<'de> for BRCAD {
                 part.flip_x.write_to(f, Self::BYTE_ORDER)?;
                 part.flip_y.write_to(f, Self::BYTE_ORDER)?;
                 part.opacity.write_to(f, Self::BYTE_ORDER)?;
-                (0 as u8).write_to(f, Self::BYTE_ORDER)?; // terminator/padding
+                0u8.write_to(f, Self::BYTE_ORDER)?; // terminator/padding
             }
         }
 
@@ -254,7 +254,7 @@ impl<'de> BXCAD<'de> for BRCAD {
                 step.scale_y.write_to(f, Self::BYTE_ORDER)?;
                 step.rotation.write_to(f, Self::BYTE_ORDER)?;
                 step.opacity.write_to(f, Self::BYTE_ORDER)?;
-                f.write(&step.unk1)?;
+                f.write_all(&step.unk1)?;
             }
         }
         Ok(())
@@ -275,20 +275,20 @@ impl BRCAD {
                 .split_once("//")
                 .unwrap_or((line, ""))
                 .0
-                .replace("\t", " ");
+                .replace('\t', " ");
             if line.starts_with("#define ") {
                 // fuck spacing so much
                 let line = line
-                    .split_once(" ")
+                    .split_once(' ')
                     .unwrap()
                     .1
                     .trim()
-                    .split_once(" ")
+                    .split_once(' ')
                     .unwrap();
                 let num = match line
                     .1
                     .trim()
-                    .split_once(" ")
+                    .split_once(' ')
                     .unwrap_or((line.1, ""))
                     .0
                     .parse::<usize>()

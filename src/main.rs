@@ -96,7 +96,6 @@ fn main() -> Result<()> {
             };
 
             let mut in_file = File::open(&bxcad)?;
-            let mut out_file = File::create(&json)?;
 
             let bxcad_type = if is_bccad {
                 BXCADType::BCCAD
@@ -106,7 +105,7 @@ fn main() -> Result<()> {
                 bxcad::get_bxcad_type(&mut in_file)?.ok_or(Error::NotBXCAD)?
             };
 
-            if labels != None && bxcad_type != BXCADType::BRCAD {
+            if labels.is_none() && bxcad_type != BXCADType::BRCAD {
                 Err(Error::LabelsOnNotBRCAD)?
             }
 
@@ -143,6 +142,8 @@ fn main() -> Result<()> {
                 c => Err(Error::NonImplementedFeature(format!("BXCAD type {:?}", c)))?,
             }?;
 
+            let mut out_file = File::create(&json)?;
+
             writeln!(out_file, "{}", json_)?;
             println!(
                 "Serialized {:?} to {:?}",
@@ -158,8 +159,12 @@ fn main() -> Result<()> {
             stripped.read_to_string(&mut json_)?;
             let value_wrapper: Value = serde_json::from_str(&json_)?;
 
-            let Some(bxcad_type) = value_wrapper.get("bxcad_type") else {Err(Error::NotFlour)?};
-            let Some(bxcad_type) = bxcad_type.as_str() else {Err(Error::NotFlour)?};
+            let Some(bxcad_type) = value_wrapper.get("bxcad_type") else {
+                Err(Error::NotFlour)?
+            };
+            let Some(bxcad_type) = bxcad_type.as_str() else {
+                Err(Error::NotFlour)?
+            };
             let bxcad_type: BXCADType = serde_json::from_str(&format!("\"{}\"", bxcad_type))?;
 
             let bxcad = match bxcad {
@@ -177,13 +182,17 @@ fn main() -> Result<()> {
             };
 
             let indexized = if let Some(bxcad_type) = value_wrapper.get("indexize") {
-                let Some(c) = bxcad_type.as_bool() else {Err(Error::NotFlour)?};
+                let Some(c) = bxcad_type.as_bool() else {
+                    Err(Error::NotFlour)?
+                };
                 c
             } else {
                 false
             };
 
-            let mut out_file = File::create(&bxcad)?;
+            // file is created after (de)serializing, see issue #1
+            let mut out_file;
+
             match bxcad_type {
                 BXCADType::BCCAD => {
                     let bccad = if indexized {
@@ -194,6 +203,7 @@ fn main() -> Result<()> {
                         let bxcad_wrapper: BXCADWrapper<BCCAD> = serde_json::from_str(&json_)?;
                         bxcad_wrapper.to_bxcad()?
                     };
+                    out_file = File::create(&bxcad)?;
                     bccad.to_binary(&mut out_file)?;
                 }
                 BXCADType::BRCAD => {
@@ -205,6 +215,7 @@ fn main() -> Result<()> {
                         let bxcad_wrapper: BXCADWrapper<BRCAD> = serde_json::from_str(&json_)?;
                         bxcad_wrapper.to_bxcad()?
                     };
+                    out_file = File::create(&bxcad)?;
                     brcad.to_binary(&mut out_file)?;
                 }
                 //  BXCADType::Custom(_) => todo!(),

@@ -28,7 +28,7 @@ impl ByteStream for f32 {
             ByteOrder::BigEndian => self.to_be_bytes(),
             ByteOrder::LittleEndian => self.to_le_bytes(),
         };
-        file.write(&bytes)?;
+        file.write_all(&bytes)?;
         Ok(())
     }
 }
@@ -68,9 +68,9 @@ impl ByteStream for VarLenString {
         let bytes = string.as_bytes();
         let padding_size = 4 - ((size + 1) % 4);
         size.write_to(file, order)?;
-        file.write(&bytes)?;
+        file.write_all(bytes)?;
         for _ in 0..padding_size {
-            (0 as u8).write_to(file, order)?;
+            0u8.write_to(file, order)?;
         }
         Ok(())
     }

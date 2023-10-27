@@ -155,7 +155,7 @@ impl<'de> BXCAD<'de> for BCCAD {
                 let screen_color = Color::read_from(f, Self::BYTE_ORDER)?;
                 let opacity = u8::read_from(f, Self::BYTE_ORDER)?;
                 let mut unk1 = [0; 12];
-                f.read(&mut unk1)?;
+                f.read_exact(&mut unk1)?;
                 let designation_id = u8::read_from(f, Self::BYTE_ORDER)?;
                 let unk2 = u8::read_from(f, Self::BYTE_ORDER)?;
                 let depth = StereoDepth {
@@ -204,7 +204,7 @@ impl<'de> BXCAD<'de> for BCCAD {
                 let rotation = f32::read_from(f, Self::BYTE_ORDER)?;
                 let multiply_color = Color::read_from(f, Self::BYTE_ORDER)?;
                 let mut unk = [0; 3];
-                f.read(&mut unk)?;
+                f.read_exact(&mut unk)?;
                 let opacity = u16::read_from(f, Self::BYTE_ORDER)?;
                 steps.push(AnimationStep {
                     sprite,
@@ -265,14 +265,14 @@ impl<'de> BXCAD<'de> for BCCAD {
                 part.multiply_color.write_to(f, Self::BYTE_ORDER)?;
                 part.screen_color.write_to(f, Self::BYTE_ORDER)?;
                 part.opacity.write_to(f, Self::BYTE_ORDER)?;
-                f.write(&part.unk1)?;
+                f.write_all(&part.unk1)?;
                 part.designation_id.write_to(f, Self::BYTE_ORDER)?;
                 part.unk2.write_to(f, Self::BYTE_ORDER)?;
                 part.depth.top_left.write_to(f, Self::BYTE_ORDER)?;
                 part.depth.bottom_left.write_to(f, Self::BYTE_ORDER)?;
                 part.depth.top_right.write_to(f, Self::BYTE_ORDER)?;
                 part.depth.bottom_right.write_to(f, Self::BYTE_ORDER)?;
-                (0 as u8).write_to(f, Self::BYTE_ORDER)?; // terminator
+                0u8.write_to(f, Self::BYTE_ORDER)?; // terminator
             }
         }
 
@@ -291,11 +291,11 @@ impl<'de> BXCAD<'de> for BCCAD {
                 step.scale_y.write_to(f, Self::BYTE_ORDER)?;
                 step.rotation.write_to(f, Self::BYTE_ORDER)?;
                 step.multiply_color.write_to(f, Self::BYTE_ORDER)?;
-                f.write(&step.unk)?;
+                f.write_all(&step.unk)?;
                 step.opacity.write_to(f, Self::BYTE_ORDER)?;
             }
         }
-        (0 as u8).write_to(f, Self::BYTE_ORDER)?; // terminator
+        0u8.write_to(f, Self::BYTE_ORDER)?; // terminator
 
         Ok(())
     }
