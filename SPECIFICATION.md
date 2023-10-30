@@ -1,5 +1,4 @@
 # BXCAD file specifications
-todo
 
 ## Type names used
 - bool: Boolean (1-byte, 0 = false, 1 = true, >=2 = UB)
@@ -68,7 +67,8 @@ added properties
 
 | Type             | Name             | Description      |
 | ---------------- | ---------------- | ---------------- |
-| u32              | Number of frames | Number of frames |
+| u16              | Number of frames | Number of frames |
+| u16              | Unknown          | ?                |
 | 40 bytes / frame | Animation frames | List of frames   |
 
 Each frame has the following structure:
@@ -159,5 +159,5 @@ Each frame has the following structure:
 | f32     | X scaling | Multiplier to the frame's X scale (width)                                          |
 | f32     | Y scaling | Multiplier to the frame's Y scale (height)                                         |
 | f32     | Rotation  | Rotation of the frame (in degrees?)                                                |
-| u8     | Opacity   | Opacity of the frame                                                               |
-| 3 bytes | Unknown   | Padding?                                                                                  |
+| u8      | Opacity   | Opacity of the frame                                                               |
+| 3 bytes | Unknown   | Padding?                                                                           |
