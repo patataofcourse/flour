@@ -20,7 +20,7 @@ pub const OLDEST_SUPPORTED_VERSION: &str = "2.0.0-pre1";
 
 /// A trait that encapsulates the basics of the BCAD / BXCAD formats,
 /// meant to be used for ease of (de)serializing
-pub trait BXCAD<'de>: Serialize + Deserialize<'de> {
+pub trait BXCAD: Sized {
     /// Endianness of the file
     const BYTE_ORDER: ByteOrder;
     /// Last revision timestamp - used to identify different versions
@@ -96,8 +96,8 @@ pub struct BXCADWrapper<X> {
     data: X,
 }
 
-impl<X: for<'de> BXCAD<'de>> BXCADWrapper<X> {
-    /// Create a BXCADWrapper from the given BXCAD struct.
+impl<X: BXCAD> BXCADWrapper<X> {
+    /// Create a BXCADWrapper from the given BXCAD struct, with `indexize` set to false.
     ///
     /// To see the meaning of `indexize`, see [BXCADWrapper::indexize]
     pub fn from_bxcad(bxcad: X) -> Self {

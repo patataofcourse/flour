@@ -5,7 +5,7 @@
 //!
 //! **Example:**
 //! ```no_run
-//! use std::fs::File;
+//! # use std::fs::File;
 //! use flour::{BCCAD, BXCAD};
 //! # fn main() -> Result<(), flour::error::Error> {
 //!
@@ -21,7 +21,30 @@
 //! # }
 //! ```
 //!
-//! # JSON (de)serializing and BXCADWrapper
+//! # Serializing and BXCADWrapper
+//! While [`BXCAD`] doesn't require `serde::Serialize` and `serde::Deserialize`, implementing
+//! those is the main idea behind the trait, since that way the BXCAD can be wrapped inside a
+//! [`bxcad::BXCADWrapper`]. The function of this struct is to give a common metadata API for all
+//! flour-compatible BXCADs.
+//!
+//! You can create a [`BXCADWrapper`][bxcad::BXCADWrapper] like so:
+//! ```no_run
+//! # use std::fs::File;
+//! # use flour::{BCCAD, BXCAD};
+//! use flour::bxcad::BXCADWrapper;
+//! # fn main() -> Result<(), flour::error::Error> {
+//! #let mut file = File::open("file.bccad")?;
+//! # let mut bccad = BCCAD::from_binary(&mut file)?;
+//!
+//! // this could instead be BXCADWrapper::from_bxcad_indexized, to allow indexization
+//! let wrapper = BXCADWrapper::from_bxcad(bccad);
+//! # }
+//! ```
+//!
+//! This [`BXCADWrapper`][bxcad::BXCADWrapper] can now be serialized/deserialized without any
+//! compatibility issues with other BXCAD types or with future/past versions of flour (post-1.0).
+//!
+//! For details on "indexization", see [`bxcad::qol::Indexizable`].
 //!
 //! # Features
 //! * **`modder_qol`**

@@ -103,7 +103,7 @@ pub struct AnimationStep {
     pub unk1: [u8; 3],
 }
 
-impl<'de> BXCAD<'de> for BRCAD {
+impl BXCAD for BRCAD {
     const BYTE_ORDER: ByteOrder = ByteOrder::BigEndian;
     const TIMESTAMP: u32 = 20100312;
     const BXCAD_TYPE: BXCADType = BXCADType::BRCAD;

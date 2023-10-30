@@ -7,8 +7,14 @@ use crate::{
 use std::collections::BTreeMap;
 
 /// Trait for BXCAD types that allow "indexization", that is, conversion for their `Sprite` lists
-/// from a Vec to some sort of Map (usually BTreeMap<uint, Sprite>)
-pub trait Indexizable: for<'de> BXCAD<'de> {
+/// from a Vec to some sort of Map (usually `BTreeMap<uX, Sprite>`)
+///
+/// This is so that the list of `Sprite`s can be more easily edited by hand, and more easily referenced,
+/// due to including the number of the sprite right next to the entry.
+///
+/// Unless you're going to deal with `BXCAD` files by hand (for example, as JSON in the flour binary), you
+/// probably don't need this.
+pub trait Indexizable: BXCAD {
     /// The type that contains indexized data for this BXCAD
     type Indexized;
     /// Convert a standard BXCAD to indexized
