@@ -33,11 +33,13 @@
 //! # use flour::{BCCAD, BXCAD};
 //! use flour::bxcad::BXCADWrapper;
 //! # fn main() -> Result<(), flour::error::Error> {
-//! #let mut file = File::open("file.bccad")?;
+//! # let mut file = File::open("file.bccad")?;
 //! # let mut bccad = BCCAD::from_binary(&mut file)?;
 //!
 //! // this could instead be BXCADWrapper::from_bxcad_indexized, to allow indexization
 //! let wrapper = BXCADWrapper::from_bxcad(bccad);
+//! 
+//! # Ok(())
 //! # }
 //! ```
 //!
