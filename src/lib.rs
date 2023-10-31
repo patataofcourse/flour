@@ -46,6 +46,11 @@
 //!
 //! For details on "indexization", see [`bxcad::qol::Indexizable`].
 //!
+//! # Comments
+//! `flour` supports the following types of comments:
+//! - Single-line: `// comment`
+//! - Multi-line: `/* comment */`
+//! 
 //! # Features
 //! * **`modder_qol`**
 
