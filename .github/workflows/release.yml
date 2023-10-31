@@ -1,10 +1,6 @@
 name: Debug builds
 
-on:
-  push:
-    branches: [ master ]
-  pull_request:
-    branches: [ master ]
+on: workflow-dispatch
 
 env:
   CARGO_TERM_COLOR: always
@@ -17,13 +13,13 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Build
-      run: cargo build --verbose --features=clap
+      run: cargo build --verbose --release --features=clap
     - name: Run tests
       run: cargo test --verbose
     - uses: actions/upload-artifact@v1
       with:
         name: flour-linux
-        path: ${{runner.workspace}}/flour/target/debug/flour
+        path: ${{runner.workspace}}/flour/target/release/flour
   windows:
     name: Windows
     runs-on: windows-latest
@@ -31,13 +27,13 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Build
-      run: cargo build --verbose --features=clap
+      run: cargo build --verbose --release --features=clap
     - name: Run tests
       run: cargo test --verbose
     - uses: actions/upload-artifact@v1
       with:
         name: flour-windows
-        path: ${{runner.workspace}}/flour/target/debug/flour.exe
+        path: ${{runner.workspace}}/flour/target/release/flour.exe
   macos:
     name: Mac
     runs-on: macos-11
@@ -45,10 +41,10 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Build
-      run: cargo build --verbose --debug --features=clap
+      run: cargo build --verbose --release --features=clap
     - name: Run tests
       run: cargo test --verbose
     - uses: actions/upload-artifact@v1
       with:
         name: flour-mac
-        path: ${{runner.workspace}}/flour/target/debug/flour
+        path: ${{runner.workspace}}/flour/target/release/flour
