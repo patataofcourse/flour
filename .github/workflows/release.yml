@@ -1,6 +1,6 @@
 name: Debug builds
 
-on: workflow-dispatch
+on: workflow_dispatch
 
 env:
   CARGO_TERM_COLOR: always
