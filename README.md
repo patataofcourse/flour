@@ -1,8 +1,8 @@
 # flour
 
 [![Version 2.0](https://img.shields.io/badge/version-v2.0-red)](https://github.com/patataofcourse/flour/releases/v2.0.0)
-[![Crates.io](https://img.shields.io/badge/crates.io-v1.0-brightgreen)](https://crates.io/crates/flour/)
-[![Documentation](https://img.shields.io/badge/docs.rs-v1.0-brightgreen)](https://docs.rs/flour/)
+[![Crates.io](https://img.shields.io/badge/crates.io-v2.0-brightgreen)](https://crates.io/crates/flour/)
+[![Documentation](https://img.shields.io/badge/docs.rs-v2.0-brightgreen)](https://docs.rs/flour/)
 
 A crate that serializes and deserializes BCCAD / BRCAD files to and from a JSON format, with a library crate to parse these files
 
