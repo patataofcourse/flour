@@ -4,7 +4,6 @@
 - bool: Boolean (1-byte, 0 = false, 1 = true, >=2 = UB)
 - u8: Unsigned 8-bit (1-byte) integer
 - u16: Unsigned 16-bit (2-byte) integer
-- u24: Unsigned 24-bit (3-byte) integer
 - u32: Unsigned 32-bit (4-byte) integer
 - s16: Signed 16-bit (2-byte) integer
 - f32: Single-length (32-bit, 4-byte) floating point number
@@ -153,14 +152,14 @@ added properties
 
 Each key has the following structure:
 
-| Type   | Name           | Description                                                           |
-| ------ | -------------- | --------------------------------------------------------------------- |
-| u16    | Sprite index   | Index of the sprite shown on this key                                 |
-| u16    | Duration       | Amount of frames that this key will be shown for (FPS is not fixed)   |
-| s16    | Position X     | Additive X offset for the sprite                                      |
-| s16    | Position Y     | Additive Y offset for the sprite                                      |
-| f32    | Scale X        | The sprite's X scaling factor                                         |
-| f32    | Scale Y        | The sprite's Y scaling factor                                         |
-| f32    | Angle          | Additive rotation angle for the sprite (in degrees)                   |
-| u8     | Opacity        | Opacity of the sprite                                                 |
-| u24    | (Padding)      | 24-bit padding                                                        |
+| Type    | Name           | Description                                                           |
+| ------- | -------------- | --------------------------------------------------------------------- |
+| u16     | Sprite index   | Index of the sprite shown on this key                                 |
+| u16     | Duration       | Amount of frames that this key will be shown for (FPS is not fixed)   |
+| s16     | Position X     | Additive X offset for the sprite                                      |
+| s16     | Position Y     | Additive Y offset for the sprite                                      |
+| f32     | Scale X        | The sprite's X scaling factor                                         |
+| f32     | Scale Y        | The sprite's Y scaling factor                                         |
+| f32     | Angle          | Additive rotation angle for the sprite (in degrees)                   |
+| u8      | Opacity        | Opacity of the sprite                                                 |
+| 3 bytes | (Padding)      | 24-bit padding                                                        |
