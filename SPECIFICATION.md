@@ -5,9 +5,7 @@
 - u8: Unsigned 8-bit (1-byte) integer
 - u16: Unsigned 16-bit (2-byte) integer
 - u32: Unsigned 32-bit (4-byte) integer
-- s8: Signed 8-bit (1-byte) integer
 - s16: Signed 16-bit (2-byte) integer
-- s32: Signed 32-bit (4-byte) integer
 - f32: Single-length (32-bit, 4-byte) floating point number
 - RGB color: `u8[3]` with RGB values as `[r, g, b]`
 
@@ -96,20 +94,20 @@ Generally a subset of BCCAD since it's an older revision of the format. Excludes
 ### Main structure:
 
 
-| Type          | Name                  | Description                                |
-| ------------- | --------------------- | ------------------------------------------ |
-| u32           | Timestamp             | Date of last format revision               |
-| u32           | Unknown               | ?                                          |
-| u16           | Spritesheet number    | Unknown?                                   |
-| u16           | Spritesheet "control" | Unknown?                                   |
-| u16           | Texture width         | Width of the image this BRCAD refers to    |
-| u16           | Texture height        | Height of the image this BRCAD refers to   |
-| u16           | Number of sprites     | Number of "sprites" or frames in the BRCAD |
-| u16           | Unknown               | ?                                          |
-| Variable size | Sprites               | List of BRCAD sprites (see below)          |
-| u16           | Number of animations  | Number of animations in the BRCAD          |
-| u16           | Unknown               | ?                                          |
-| Variable size | Animations            | List of BRCAD animations (see below)       |
+| Type          | Name                  | Description                                               |
+| ------------- | --------------------- | --------------------------------------------------------- |
+| u32           | Timestamp             | Date of last format revision                              |
+| u32           | Unknown               | ?                                                         |
+| u16           | Spritesheet index     | Index into cellanim.tpl for the associated texture atlas  |
+| u16           | Spritesheet "control" | Unknown?                                                  |
+| u16           | Texture width         | Width of the associated texture atlas                     |
+| u16           | Texture height        | Height of the associated texture atlas                    |
+| u16           | Number of sprites     | Number of sprites this BRCAD contains                     |
+| u16           | (Padding)             | 16-bit padding                                            |
+| Variable size | Sprites               | List of sprites (see below)                               |
+| u16           | Number of animations  | Number of animations this BRCAD contains                  |
+| u16           | (Padding)             | 16-bit padding                                            |
+| Variable size | Animations            | List of animations (see below)                            |
 
 ### Sprite:
 
@@ -118,46 +116,50 @@ Each sprite is a collection of cells or "sprite parts", small textures taken fro
 | Type            | Name            | Description            |
 | --------------- | --------------- | ---------------------- |
 | u16             | Number of parts | Number of sprite parts |
-| u16             | Unknown         | ?                      |
+| u16             | (Padding)       | 16-bit padding         |
 | 32 bytes / part | Sprite parts    | List of sprite parts   |
 
 Each sprite part has the following structure:
 
 | Type   | Name           | Description                                                    |
 | ------ | -------------- | -------------------------------------------------------------- |
-| u16    | Texture X      | X position of the image in the texture sheet (top-left corner) |
-| u16    | Texture Y      | Y position of the image in the texture sheet (top-left corner) |
-| u32    | Unknown        | ?                                                              |
-| u16    | Texture width  | Width of the image in the texture sheet                        |
-| u16    | Texture height | Height of the image in the texture sheet                       |
-| u16    | X position     | X position of the image in the sprite                          |
-| u16    | Y position     | Y position of the image in the sprite                          |
-| f32    | Scale (X axis) | Scaling factor for the X axis                                  |
-| f32    | Scale (Y axis) | Scaling factor for the Y axis                                  |
-| f32    | Rotation       | Rotation of the sprite part (in degrees)                       |
-| bool   | Flip X         | If true, flip part on X axis                                   |
-| bool   | Flip Y         | If true, flip part on Y axis                                   |
-| u8     | Opacity        | Global opacity for the sprite part                             |
-| 1 byte | Padding        | Referred to as "terminator" on Bread                           |
+| u16    | Region X       | X position of the part's region (top-left corner)              |
+| u16    | Region Y       | Y position of the part's region (top-left corner)              |
+| u16    | Region W       | Width of the part's region                                     |
+| u16    | Region H       | Height of the part's region                                    |
+| u16    | (Reserved)     | Reserved, set by the game                                      |
+| u16    | (Padding)      | 16-bit padding                                                 |
+| s16    | Position X     | The part's X position                                          |
+| s16    | Position Y     | The part's Y position                                          |
+| f32    | Scale X        | Scaling factor for the X axis                                  |
+| f32    | Scale Y        | Scaling factor for the Y axis                                  |
+| f32    | Angle          | Rotation angle in degrees                                      |
+| bool   | Flip X         | If true, flip part on X axis from the center                   |
+| bool   | Flip Y         | If true, flip part on Y axis from the center                   |
+| u8     | Opacity        | The part's opacity                                             |
+| u8     | (Padding)      | 8-bit padding                                                  |
 
 ### Animation:
 
-Each animation is a collection of animation frames, which are references to sprites with specific
+Each animation is a collection of animation keys, which are references to sprites with specific
 added properties
 
 | Type             | Name             | Description      |
 | ---------------- | ---------------- | ---------------- |
-| u32              | Number of frames | Number of frames |
-| 20 bytes / frame | Animation frames | List of frames   |
+| u16              | Number of keys   | Number of keys   |
+| u16              | (Padding)        | 16-bit padding   |
+| 24 bytes / key   | Animation keys   | List of keys     |
 
-Each frame has the following structure:
+Each key has the following structure:
 
-| Type    | Name      | Description                                                                        |
-| ------- | --------- | ---------------------------------------------------------------------------------- |
-| u16     | Sprite    | Number of the sprite that this animation frame uses                                |
-| u16     | Duration  | Amount of time that the frame will last. Unit is variable, sometimes BPM-dependent |
-| f32     | X scaling | Multiplier to the frame's X scale (width)                                          |
-| f32     | Y scaling | Multiplier to the frame's Y scale (height)                                         |
-| f32     | Rotation  | Rotation of the frame (in degrees?)                                                |
-| u8      | Opacity   | Opacity of the frame                                                               |
-| 3 bytes | Unknown   | Padding?                                                                           |
+| Type    | Name           | Description                                                           |
+| ------- | -------------- | --------------------------------------------------------------------- |
+| u16     | Sprite index   | Index of the sprite shown on this key                                 |
+| u16     | Duration       | Amount of frames that this key will be shown for (FPS is not fixed)   |
+| s16     | Position X     | Additive X offset for the sprite                                      |
+| s16     | Position Y     | Additive Y offset for the sprite                                      |
+| f32     | Scale X        | The sprite's X scaling factor                                         |
+| f32     | Scale Y        | The sprite's Y scaling factor                                         |
+| f32     | Angle          | Additive rotation angle for the sprite (in degrees)                   |
+| u8      | Opacity        | Opacity of the sprite                                                 |
+| 3 bytes | (Padding)      | 24-bit padding                                                        |
