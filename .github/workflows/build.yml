@@ -20,7 +20,7 @@ jobs:
       run: cargo build --verbose --features=clap
     - name: Run tests
       run: cargo test --verbose
-    - uses: actions/upload-artifact@v1
+    - uses: actions/upload-artifact@v4
       with:
         name: flour-linux
         path: ${{runner.workspace}}/flour/target/debug/flour
@@ -34,13 +34,13 @@ jobs:
       run: cargo build --verbose --features=clap
     - name: Run tests
       run: cargo test --verbose
-    - uses: actions/upload-artifact@v1
+    - uses: actions/upload-artifact@v4
       with:
         name: flour-windows
         path: ${{runner.workspace}}/flour/target/debug/flour.exe
   macos:
     name: Mac
-    runs-on: macos-11
+    runs-on: macos-12
 
     steps:
     - uses: actions/checkout@v2
@@ -48,7 +48,7 @@ jobs:
       run: cargo build --verbose --features=clap
     - name: Run tests
       run: cargo test --verbose
-    - uses: actions/upload-artifact@v1
+    - uses: actions/upload-artifact@v4
       with:
         name: flour-mac
         path: ${{runner.workspace}}/flour/target/debug/flour

@@ -16,7 +16,7 @@ jobs:
       run: cargo build --verbose --release --features=clap
     - name: Run tests
       run: cargo test --verbose
-    - uses: actions/upload-artifact@v1
+    - uses: actions/upload-artifact@v4
       with:
         name: flour-linux
         path: ${{runner.workspace}}/flour/target/release/flour
@@ -30,13 +30,13 @@ jobs:
       run: cargo build --verbose --release --features=clap
     - name: Run tests
       run: cargo test --verbose
-    - uses: actions/upload-artifact@v1
+    - uses: actions/upload-artifact@v4
       with:
         name: flour-windows
         path: ${{runner.workspace}}/flour/target/release/flour.exe
   macos:
     name: Mac
-    runs-on: macos-11
+    runs-on: macos-12
 
     steps:
     - uses: actions/checkout@v2
