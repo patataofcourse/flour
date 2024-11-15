@@ -82,6 +82,17 @@ pub struct StereoDepth {
     /// Bottom-right corner
     pub bottom_right: f32,
 }
+impl StereoDepth {
+    /// Creates an instance of this struct with 0 stereoscopic depth
+    pub(crate) fn none() -> StereoDepth {
+        Self {
+            top_left: 0.0,
+            bottom_left: 0.0,
+            top_right: 0.0,
+            bottom_right: 0.0,
+        }
+    }
+}
 
 /// A cell animation for BCCAD, composed of different frames/[`Sprite`]s
 #[derive(Serialize, Deserialize, Clone)]

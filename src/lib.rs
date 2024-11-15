@@ -38,7 +38,7 @@
 //!
 //! // this could instead be BXCADWrapper::from_bxcad_indexized, to allow indexization
 //! let wrapper = BXCADWrapper::from_bxcad(bccad);
-//! 
+//!
 //! # Ok(())
 //! # }
 //! ```
@@ -52,7 +52,7 @@
 //! `flour` supports the following types of comments:
 //! - Single-line: `// comment`
 //! - Multi-line: `/* comment */`
-//! 
+//!
 //! # Features
 //! * **`modder_qol`**
 
@@ -61,6 +61,8 @@ use serde::{Deserialize, Serialize};
 /// Contains a model for the generic BXCAD format, as well as
 /// known implementations of it
 pub mod bxcad;
+/// Handles lossy conversion between the BRCAD and BCCAD formats
+pub mod conversion;
 /// Error handling
 pub mod error;
 
@@ -72,8 +74,14 @@ pub use bxcad::{bccad::BCCAD, brcad::BRCAD, BXCAD};
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Color {
     pub red: u8,
-    pub blue: u8,
     pub green: u8,
+    pub blue: u8,
+}
+
+impl Color {
+    pub fn new(red: u8, green: u8, blue: u8) -> Self {
+        Self { red, green, blue }
+    }
 }
 
 /// Variable length string, used in BCCAD labels

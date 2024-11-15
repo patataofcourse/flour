@@ -6,6 +6,8 @@ use std::io::{Read, Seek, SeekFrom, Write};
 
 use self::qol::Indexizable;
 
+//TODO: update new docs to match newly formatted spec
+
 /// Everything related to the BCCAD format used in Rhythm Heaven Megamix
 pub mod bccad;
 /// Everything related to the BRCAD format used in Rhythm Heaven Fever
