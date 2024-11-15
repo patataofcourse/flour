@@ -87,7 +87,7 @@ pub struct Animation {
 /// whole animation
 #[derive(Serialize, Deserialize, Clone)]
 pub struct AnimationStep {
-    /// A reference to the index number of the [`Sprite`] this AnimationStep uses
+    /// A reference to the index number of the [Sprite] this AnimationStep uses
     pub sprite: u16,
     /// Duration of the step (FPS is variable)
     pub duration: u16,
