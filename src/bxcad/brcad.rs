@@ -89,8 +89,12 @@ pub struct Animation {
 pub struct AnimationStep {
     /// A reference to the index number of the [`Sprite`] this AnimationStep uses
     pub sprite: u16,
-    /// Duration of the frame (in unknown units, seems to have changeable speed)
+    /// Duration of the step (FPS is variable)
     pub duration: u16,
+    /// Turns out this is actually *two* values: the X and Y displacement for the sprite.
+    /// You should instead use [AnimationStep::pos_x] and [AnimationStep::pos_y], or the `_mut` variants.
+    //TODO: serialize as pos_x and pos_y, allow deserializing both forms
+    #[deprecated(since = "2.1.0", note = "use pos_x and pos_y instead")]
     pub unk0: u32,
     /// Scaling factor for the X axis
     pub scale_x: f32,
@@ -101,6 +105,50 @@ pub struct AnimationStep {
     /// Opacity for the sprite
     pub opacity: u8,
     pub unk1: [u8; 3],
+}
+
+impl AnimationStep {
+    fn get_pos(&self, y: bool) -> u16 {
+        #[allow(deprecated)]
+        let ptr = &self.unk0 as *const u32 as *const u16;
+
+        if (cfg!(target_endian = "big") && y) || (cfg!(target_endian = "little") && !y) {
+            unsafe { *ptr.add(1) }
+        } else {
+            unsafe { *ptr }
+        }
+    }
+
+    fn get_pos_mut(&mut self, y: bool) -> &mut u16 {
+        #[allow(deprecated)]
+        let ptr = &mut self.unk0 as *mut u32 as *mut u16;
+
+        if (cfg!(target_endian = "big") && y) || (cfg!(target_endian = "little") && !y) {
+            unsafe { &mut *ptr.add(1) }
+        } else {
+            unsafe { &mut *ptr }
+        }
+    }
+
+    /// Get the X position for this step's sprite
+    pub fn pos_x(&self) -> u16 {
+        self.get_pos(false)
+    }
+
+    /// Get the Y position for this step's sprite
+    pub fn pos_y(&self) -> u16 {
+        self.get_pos(true)
+    }
+
+    /// Get the X position for this step's sprite (mutable)
+    pub fn pos_x_mut(&mut self) -> &mut u16 {
+        self.get_pos_mut(false)
+    }
+
+    /// Get the Y position for this step's sprite (mutable)
+    pub fn pos_y_mut(&mut self) -> &mut u16 {
+        self.get_pos_mut(true)
+    }
 }
 
 impl BXCAD for BRCAD {
@@ -172,6 +220,7 @@ impl BXCAD for BRCAD {
                 let mut unk1 = [0u8; 3];
                 f.read_exact(&mut unk1)?;
 
+                #[allow(deprecated)]
                 steps.push(AnimationStep {
                     sprite,
                     duration,
@@ -249,6 +298,7 @@ impl BXCAD for BRCAD {
             for step in &anim.steps {
                 step.sprite.write_to(f, Self::BYTE_ORDER)?;
                 step.duration.write_to(f, Self::BYTE_ORDER)?;
+                #[allow(deprecated)]
                 step.unk0.write_to(f, Self::BYTE_ORDER)?;
                 step.scale_x.write_to(f, Self::BYTE_ORDER)?;
                 step.scale_y.write_to(f, Self::BYTE_ORDER)?;
