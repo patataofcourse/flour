@@ -1,12 +1,12 @@
 use crate::{
     bxcad::{
         bccad::{self, StereoDepth},
-        brcad, PosInTexture,
+        PosInTexture,
     },
-    Color, BCCAD, BRCAD, BXCAD,
+    Color, BCCAD, BRCAD,
 };
 
-pub fn ccad_to_rcad(og: &BRCAD, scale_texture: bool) -> BCCAD {
+pub fn rcad_to_ccad(og: &BRCAD, scale_texture: bool) -> BCCAD {
     let mut out = BCCAD {
         timestamp: None,
         texture_width: og.texture_width,
@@ -62,9 +62,19 @@ pub fn ccad_to_rcad(og: &BRCAD, scale_texture: bool) -> BCCAD {
                     .map(|step| bccad::AnimationStep {
                         sprite: step.sprite,
                         duration: step.duration,
-                        pos_x: 0,
-                        pos_y: 0,
-                        ..todo!()
+
+                        pos_x: 0, //TODO
+                        pos_y: 0, //TODO
+                        scale_x: step.scale_x,
+                        scale_y: step.scale_y,
+                        rotation: step.rotation,
+                        opacity: (step.opacity as u16),
+
+                        multiply_color: Color::new(255, 255, 255),
+                        depth: 0.0,
+
+                        // TODO: figure out proper starting values for this
+                        unk: [0; 3],
                     })
                     .collect(),
             })
@@ -86,4 +96,8 @@ pub fn ccad_to_rcad(og: &BRCAD, scale_texture: bool) -> BCCAD {
     }
 
     out
+}
+
+pub fn ccad_to_rcad(og: &BCCAD, scale_texture: bool) -> BRCAD {
+    todo!();
 }
