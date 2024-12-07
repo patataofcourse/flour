@@ -118,13 +118,18 @@ pub mod use_variation {
             let Ok(v) = v.try_into() else {
                 Err(E::invalid_type(Unexpected::Signed(v), &UNEXPECTED))?
             };
+
             self.visit_i32(v)
         }
 
         // 2.1+ behavior
 
         fn visit_bool<E: Error>(self, v: bool) -> Result<Self::Value, E> {
-            Ok(v as u32)
+            if cfg!(target_endian = "big") {
+                Ok(v as u32)
+            } else {
+                Ok((v as u32) << 24)
+            }
         }
     }
 
@@ -165,7 +170,11 @@ pub mod variation_num {
         fn visit_u64<E>(self, v: u64) -> Result<Self::Value, E> {
             let v = v as u32;
 
-            Ok(if v > u16::MAX as u32 { v >> 16 } else { v })
+            if cfg!(target_endian = "big") {
+                Ok(if v > u16::MAX as u32 { v >> 16 } else { v })
+            } else {
+                Ok(if v > u16::MAX as u32 { v } else { v << 16 })
+            }
         }
     }
 

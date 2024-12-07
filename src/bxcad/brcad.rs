@@ -43,7 +43,8 @@ pub struct BRCAD {
 impl BRCAD {
     /// Get whether or not associated texture sheet has variations, like in Flock Step
     ///
-    /// If true, textures must be paletted; if false, textures must not be paletted
+    /// If true, textures must be paletted; if false, textures must not be paletted. For Flock Step's birds,
+    /// this value is overwritten by the game
     #[allow(deprecated)]
     pub fn has_variations(&self) -> bool {
         if cfg!(target_endian = "big") {
@@ -55,7 +56,8 @@ impl BRCAD {
 
     /// Get whether or not associated texture sheet has variations, like in Flock Step (mutable)
     ///
-    /// If true, textures must be paletted; if false, textures must not be paletted
+    /// If true, textures must be paletted; if false, textures must not be paletted. For Flock Step's birds,
+    /// this value is overwritten by the game
     pub fn has_variations_mut(&mut self) -> &mut bool {
         #[allow(deprecated)]
         let ptr = &mut self.unk0 as *mut u32 as *mut u8 as *mut bool;
