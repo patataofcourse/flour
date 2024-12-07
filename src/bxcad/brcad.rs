@@ -95,6 +95,7 @@ pub struct AnimationStep {
     /// You should instead use [AnimationStep::pos_x] and [AnimationStep::pos_y], or the `_mut` variants.
     //TODO: serialize as pos_x and pos_y, allow deserializing both forms
     #[deprecated(since = "2.1.0", note = "use pos_x and pos_y instead")]
+    #[serde(with = "pos_xy", rename = "pos", alias = "unk0")]
     pub unk0: u32,
     /// Scaling factor for the X axis
     pub scale_x: f32,
@@ -108,9 +109,9 @@ pub struct AnimationStep {
 }
 
 impl AnimationStep {
-    fn get_pos(&self, y: bool) -> u16 {
+    fn get_pos(unk0: &u32, y: bool) -> i16 {
         #[allow(deprecated)]
-        let ptr = &self.unk0 as *const u32 as *const u16;
+        let ptr = unk0 as *const u32 as *const i16;
 
         if (cfg!(target_endian = "big") && y) || (cfg!(target_endian = "little") && !y) {
             unsafe { *ptr.add(1) }
@@ -119,9 +120,8 @@ impl AnimationStep {
         }
     }
 
-    fn get_pos_mut(&mut self, y: bool) -> &mut u16 {
-        #[allow(deprecated)]
-        let ptr = &mut self.unk0 as *mut u32 as *mut u16;
+    fn get_pos_mut(unk0: &mut u32, y: bool) -> &mut i16 {
+        let ptr = unk0 as *mut u32 as *mut i16;
 
         if (cfg!(target_endian = "big") && y) || (cfg!(target_endian = "little") && !y) {
             unsafe { &mut *ptr.add(1) }
@@ -131,23 +131,27 @@ impl AnimationStep {
     }
 
     /// Get the X position for this step's sprite
-    pub fn pos_x(&self) -> u16 {
-        self.get_pos(false)
+    pub fn pos_x(&self) -> i16 {
+        #[allow(deprecated)]
+        Self::get_pos(&self.unk0, false)
     }
 
     /// Get the Y position for this step's sprite
-    pub fn pos_y(&self) -> u16 {
-        self.get_pos(true)
+    pub fn pos_y(&self) -> i16 {
+        #[allow(deprecated)]
+        Self::get_pos(&self.unk0, true)
     }
 
     /// Get the X position for this step's sprite (mutable)
-    pub fn pos_x_mut(&mut self) -> &mut u16 {
-        self.get_pos_mut(false)
+    pub fn pos_x_mut(&mut self) -> &mut i16 {
+        #[allow(deprecated)]
+        Self::get_pos_mut(&mut self.unk0, false)
     }
 
     /// Get the Y position for this step's sprite (mutable)
-    pub fn pos_y_mut(&mut self) -> &mut u16 {
-        self.get_pos_mut(true)
+    pub fn pos_y_mut(&mut self) -> &mut i16 {
+        #[allow(deprecated)]
+        Self::get_pos_mut(&mut self.unk0, true)
     }
 }
 
@@ -354,5 +358,90 @@ impl BRCAD {
             }
         }
         Ok(())
+    }
+}
+
+/// Implementation for AnimationStep pos_x and pos_y serialization in flour 2.1+
+///
+mod pos_xy {
+    use super::AnimationStep;
+    use serde::{
+        de::{Error, SeqAccess, Unexpected, Visitor},
+        ser::SerializeSeq,
+    };
+
+    struct PosXYVisitor;
+
+    impl<'de> Visitor<'de> for PosXYVisitor {
+        type Value = u32;
+
+        fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
+            write!(
+                formatter,
+                "a sequence of two 16-bit signed integers or one 32-bit integer"
+            )
+        }
+
+        // 1.0 - 2.0 behavior
+
+        fn visit_u32<E>(self, v: u32) -> Result<Self::Value, E> {
+            Ok(v)
+        }
+
+        fn visit_i32<E>(self, v: i32) -> Result<Self::Value, E> {
+            Ok(v as u32)
+        }
+
+        fn visit_u64<E: Error>(self, v: u64) -> Result<Self::Value, E> {
+            let Ok(v) = v.try_into() else {
+                Err(E::invalid_type(
+                    Unexpected::Unsigned(v),
+                    &"a 32-bit integer",
+                ))?
+            };
+            self.visit_u32(v)
+        }
+
+        fn visit_i64<E: Error>(self, v: i64) -> Result<Self::Value, E> {
+            let Ok(v) = v.try_into() else {
+                Err(E::invalid_type(Unexpected::Signed(v), &"a 32-bit integer"))?
+            };
+            self.visit_i32(v)
+        }
+
+        // 2.1+ behavior
+
+        fn visit_seq<A: SeqAccess<'de>>(self, mut seq: A) -> Result<Self::Value, A::Error> {
+            let mut out = 0u32;
+
+            let Some(pos_x) = seq.next_element::<i16>()? else {
+                Err(A::Error::invalid_length(0, &"2"))?
+            };
+            let Some(pos_y) = seq.next_element::<i16>()? else {
+                Err(A::Error::invalid_length(1, &"2"))?
+            };
+
+            // this way we can catch some errors where there's too many values
+            if let Some(size) = seq.size_hint() {
+                if size != 2 {
+                    Err(A::Error::invalid_length(size + 2, &"2"))?;
+                }
+            }
+
+            *AnimationStep::get_pos_mut(&mut out, false) = pos_x;
+            *AnimationStep::get_pos_mut(&mut out, true) = pos_y;
+            Ok(out)
+        }
+    }
+
+    pub fn serialize<S: serde::Serializer>(value: &u32, serializer: S) -> Result<S::Ok, S::Error> {
+        let mut seq = serializer.serialize_seq(Some(2))?;
+        seq.serialize_element(&AnimationStep::get_pos(value, false))?;
+        seq.serialize_element(&AnimationStep::get_pos(value, true))?;
+        seq.end()
+    }
+
+    pub fn deserialize<'de, D: serde::Deserializer<'de>>(deserializer: D) -> Result<u32, D::Error> {
+        Ok(deserializer.deserialize_any(PosXYVisitor).unwrap())
     }
 }
