@@ -72,7 +72,7 @@ Each key has the following structure:
 
 | Type      | Name           | Description                                                                      |
 | --------- | -------------- | -------------------------------------------------------------------------------- |
-| u16       | Sprite index   | Index of the sprite shown on this key                                             |
+| u16       | Sprite index   | Index of the sprite shown on this key                                            |
 | u16       | Duration       | Amount of frames that this key will be shown for (FPS is not fixed)              |
 | s16       | Position X     | Additive X offset for the sprite                                                 |
 | s16       | Position Y     | Additive Y offset for the sprite                                                 |
@@ -93,20 +93,21 @@ Generally a subset of BCCAD since it's an older revision of the format. Excludes
 ### Main structure:
 
 
-| Type          | Name                  | Description                                              |
-| ------------- | --------------------- | -------------------------------------------------------- |
-| u32           | Timestamp             | Date of last format revision                             |
-| u32           | Unknown               | ?                                                        |
-| u16           | Spritesheet index     | Index into cellanim.tpl for the associated texture atlas |
-| u16           | Spritesheet "control" | Unknown?                                                 |
-| u16           | Texture width         | Width of the associated texture atlas                    |
-| u16           | Texture height        | Height of the associated texture atlas                   |
-| u16           | Number of sprites     | Number of sprites this BRCAD contains                    |
-| u16           | (Padding)             | 16-bit padding                                           |
-| Variable size | Sprites               | List of sprites (see below)                              |
-| u16           | Number of animations  | Number of animations this BRCAD contains                 |
-| u16           | (Padding)             | 16-bit padding                                           |
-| Variable size | Animations            | List of animations (see below)                           |
+| Type          | Name                  | Description                                                                                                                  |
+| ------------- | --------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| u32           | Timestamp             | Date of last format revision                                                                                                 |
+| bool          | Use variations        | True if associated texture sheet has variations. If true, textures must be paletted; if false, textures must not be paletted |
+| 3 bytes       | (Padding)             | 24-bit padding                                                                                                               |
+| u16           | Spritesheet index     | Index into cellanim.tpl for the associated texture atlas                                                                     |
+| u16           | Spritesheet "control" | Unknown?                                                                                                                     |
+| u16           | Texture width         | Width of the associated texture atlas                                                                                        |
+| u16           | Texture height        | Height of the associated texture atlas                                                                                       |
+| u16           | Number of sprites     | Number of sprites this BRCAD contains                                                                                        |
+| u16           | (Padding)             | 16-bit padding                                                                                                               |
+| Variable size | Sprites               | List of sprites (see below)                                                                                                  |
+| u16           | Number of animations  | Number of animations this BRCAD contains                                                                                     |
+| u16           | (Padding)             | 16-bit padding                                                                                                               |
+| Variable size | Animations            | List of animations (see below)                                                                                               |
 
 ### Sprite:
 
@@ -120,23 +121,23 @@ Each sprite is a collection of cells or "sprite parts", small textures taken fro
 
 Each sprite part has the following structure:
 
-| Type | Name       | Description                                       |
-| ---- | ---------- | ------------------------------------------------- |
-| u16  | Region X   | X position of the part's region (top-left corner) |
-| u16  | Region Y   | Y position of the part's region (top-left corner) |
-| u16  | Region W   | Width of the part's region                        |
-| u16  | Region H   | Height of the part's region                       |
-| u16  | (Reserved) | Reserved, set by the game                         |
-| u16  | (Padding)  | 16-bit padding                                    |
-| s16  | Position X | The part's X position                             |
-| s16  | Position Y | The part's Y position                             |
-| f32  | Scale X    | Scaling factor for the X axis                     |
-| f32  | Scale Y    | Scaling factor for the Y axis                     |
-| f32  | Angle      | Rotation angle in degrees                         |
-| bool | Flip X     | If true, flip part on X axis from the center      |
-| bool | Flip Y     | If true, flip part on Y axis from the center      |
-| u8   | Opacity    | The part's opacity                                |
-| u8   | (Padding)  | 8-bit padding                                     |
+| Type | Name             | Description                                                                                                                                              |
+| ---- | ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| u16  | Region X         | X position of the part's region (top-left corner)                                                                                                        |
+| u16  | Region Y         | Y position of the part's region (top-left corner)                                                                                                        |
+| u16  | Region W         | Width of the part's region                                                                                                                               |
+| u16  | Region H         | Height of the part's region                                                                                                                              |
+| u16  | Variation number | Effectively selects which variation to use. If variations are enabled in this BRCAD, this is added to the BRCAD's texture atlas index for this part only |
+| u16  | (Padding)        | 16-bit padding                                                                                                                                           |
+| s16  | Position X       | The part's X position                                                                                                                                    |
+| s16  | Position Y       | The part's Y position                                                                                                                                    |
+| f32  | Scale X          | Scaling factor for the X axis                                                                                                                            |
+| f32  | Scale Y          | Scaling factor for the Y axis                                                                                                                            |
+| f32  | Angle            | Rotation angle in degrees                                                                                                                                |
+| bool | Flip X           | If true, flip part on X axis from the center                                                                                                             |
+| bool | Flip Y           | If true, flip part on Y axis from the center                                                                                                             |
+| u8   | Opacity          | The part's opacity                                                                                                                                       |
+| u8   | (Padding)        | 8-bit padding                                                                                                                                            |
 
 ### Animation:
 
