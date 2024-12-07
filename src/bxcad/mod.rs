@@ -11,6 +11,9 @@ pub mod bccad;
 /// Everything related to the BRCAD format used in Rhythm Heaven Fever
 pub mod brcad;
 
+/// Custom implementations for (de)serialization
+mod serde_impl;
+
 /// QoL features for the JSON format
 #[cfg(feature = "modder_qol")]
 pub mod qol;

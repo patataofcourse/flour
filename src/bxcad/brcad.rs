@@ -1,5 +1,8 @@
 use crate::{
-    bxcad::{BXCADType, PosInTexture, BXCAD},
+    bxcad::{
+        serde_impl::{pos_xy, use_variation, variation_num},
+        BXCADType, PosInTexture, BXCAD,
+    },
     bytestream_addon::ByteStream,
     error::{Error, Result},
 };
@@ -14,6 +17,10 @@ pub struct BRCAD {
     /// Date of latest format revision, in YYYYMMDD format (decimal).
     /// Known timestamp is 20100312 (Mar 12 2010)
     pub timestamp: Option<u32>,
+    /// Boolean value that tests whether or not the associated texture sheet has variations.
+    /// Use [`has_variations`] or [`has_variations_mut`] instead
+    #[deprecated(since = "2.1.0", note = "use has_variations instead")]
+    #[serde(rename = "use_variation", alias = "unk0", with = "use_variation")]
     pub unk0: u32,
     /// Number of the spritesheet to use in a specific
     pub spritesheet_num: u16,
@@ -23,12 +30,42 @@ pub struct BRCAD {
     pub texture_width: u16,
     /// Height of the associated texture in pixels
     pub texture_height: u16,
+    /// Padding
     pub unk1: u16,
     /// [`Sprite`]s this BRCAD contains
     pub sprites: Vec<Sprite>,
+    /// Padding
     pub unk2: u16,
     /// [`Animation`]s that can be called for this BRCAD
     pub animations: Vec<Animation>,
+}
+
+impl BRCAD {
+    /// Get whether or not associated texture sheet has variations, like in Flock Step
+    ///
+    /// If true, textures must be paletted; if false, textures must not be paletted
+    #[allow(deprecated)]
+    pub fn has_variations(&self) -> bool {
+        if cfg!(target_endian = "big") {
+            self.unk0 as u8 == 0
+        } else {
+            (self.unk0 >> 24) as u8 == 0
+        }
+    }
+
+    /// Get whether or not associated texture sheet has variations, like in Flock Step (mutable)
+    ///
+    /// If true, textures must be paletted; if false, textures must not be paletted
+    pub fn has_variations_mut(&mut self) -> &mut bool {
+        #[allow(deprecated)]
+        let ptr = &mut self.unk0 as *mut u32 as *mut u8 as *mut bool;
+
+        if cfg!(target_endian = "big") {
+            unsafe { &mut *ptr }
+        } else {
+            unsafe { &mut *ptr.add(3) }
+        }
+    }
 }
 
 /// Struct that represents a labels file for a BRCAD file - just a bunch of #defines
@@ -39,6 +76,7 @@ pub struct BRCADLabels(pub Vec<String>);
 /// aligned together to create a full picture
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Sprite {
+    /// Padding
     pub unk: u16,
     /// [`SpritePart`]s that form this Sprite
     pub parts: Vec<SpritePart>,
@@ -50,6 +88,10 @@ pub struct Sprite {
 pub struct SpritePart {
     /// Struct that defines the bounds of the SpritePart in the texture itself
     pub texture_pos: PosInTexture,
+    /// Selects which variation to use.
+    /// Use [`variation_num`] or [`variation_num_mut`] instead
+    #[deprecated(since = "2.1.0", note = "use variation_num instead")]
+    #[serde(rename = "variation_num", alias = "unk", with = "variation_num")]
     pub unk: u32,
     /// X position where the part should be placed relative to the sprite
     pub pos_x: u16,
@@ -69,6 +111,34 @@ pub struct SpritePart {
     pub opacity: u8,
 }
 
+impl SpritePart {
+    /// Effectively selects which variation to use
+    ///
+    /// If variations are enabled in this BRCAD, this is added to the BRCAD's texture atlas index for this part only
+    #[allow(deprecated)]
+    pub fn variation_num(&self) -> u16 {
+        if cfg!(target_endian = "big") {
+            self.unk as u16
+        } else {
+            (self.unk >> 16) as u16
+        }
+    }
+
+    /// Effectively selects which variation to use (mutable)
+    ///
+    /// If variations are enabled in this BRCAD, this is added to the BRCAD's texture atlas index for this part only
+    pub fn variation_num_mut(&mut self) -> &mut u16 {
+        #[allow(deprecated)]
+        let ptr = &mut self.unk as *mut u32 as *mut u16;
+
+        if cfg!(target_endian = "big") {
+            unsafe { &mut *ptr }
+        } else {
+            unsafe { &mut *ptr.add(1) }
+        }
+    }
+}
+
 /// A cell animation for BRCAD, composed of different frames/[`Sprite`]s
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Animation {
@@ -77,6 +147,7 @@ pub struct Animation {
     /// the order of the animations, the name is just there for development
     /// purposes**
     pub name: Option<String>,
+    /// Padding
     pub unk: u16,
     /// List of [`AnimationStep`]s that constitute this Animation
     pub steps: Vec<AnimationStep>,
@@ -92,8 +163,7 @@ pub struct AnimationStep {
     /// Duration of the step (FPS is variable)
     pub duration: u16,
     /// Turns out this is actually *two* values: the X and Y displacement for the sprite.
-    /// You should instead use [AnimationStep::pos_x] and [AnimationStep::pos_y], or the `_mut` variants.
-    //TODO: serialize as pos_x and pos_y, allow deserializing both forms
+    /// You should instead use [AnimationStep::pos_x] and [AnimationStep::pos_y], or the `_mut` variants
     #[deprecated(since = "2.1.0", note = "use pos_x and pos_y instead")]
     #[serde(with = "pos_xy", rename = "pos", alias = "unk0")]
     pub unk0: u32,
@@ -109,7 +179,8 @@ pub struct AnimationStep {
 }
 
 impl AnimationStep {
-    fn get_pos(unk0: &u32, y: bool) -> i16 {
+    #[doc(hidden)]
+    pub(crate) fn get_pos(unk0: &u32, y: bool) -> i16 {
         #[allow(deprecated)]
         let ptr = unk0 as *const u32 as *const i16;
 
@@ -120,7 +191,8 @@ impl AnimationStep {
         }
     }
 
-    fn get_pos_mut(unk0: &mut u32, y: bool) -> &mut i16 {
+    #[doc(hidden)]
+    pub(crate) fn get_pos_mut(unk0: &mut u32, y: bool) -> &mut i16 {
         let ptr = unk0 as *mut u32 as *mut i16;
 
         if (cfg!(target_endian = "big") && y) || (cfg!(target_endian = "little") && !y) {
@@ -191,6 +263,7 @@ impl BXCAD for BRCAD {
                 let flip_y = bool::read_from(f, Self::BYTE_ORDER)?;
                 let opacity = u8::read_from(f, Self::BYTE_ORDER)?;
                 u8::read_from(f, Self::BYTE_ORDER)?; // terminator/padding
+                #[allow(deprecated)]
                 parts.push(SpritePart {
                     texture_pos,
                     unk,
@@ -248,6 +321,7 @@ impl BXCAD for BRCAD {
             _ => Some(timestamp),
         };
 
+        #[allow(deprecated)]
         Ok(BRCAD {
             timestamp,
             unk0,
@@ -265,6 +339,7 @@ impl BXCAD for BRCAD {
         self.timestamp
             .unwrap_or(Self::TIMESTAMP)
             .write_to(f, Self::BYTE_ORDER)?;
+        #[allow(deprecated)]
         self.unk0.write_to(f, Self::BYTE_ORDER)?;
         self.spritesheet_num.write_to(f, Self::BYTE_ORDER)?;
         self.spritesheet_control.write_to(f, Self::BYTE_ORDER)?;
@@ -281,6 +356,7 @@ impl BXCAD for BRCAD {
                 part.texture_pos.y.write_to(f, Self::BYTE_ORDER)?;
                 part.texture_pos.width.write_to(f, Self::BYTE_ORDER)?;
                 part.texture_pos.height.write_to(f, Self::BYTE_ORDER)?;
+                #[allow(deprecated)]
                 part.unk.write_to(f, Self::BYTE_ORDER)?;
                 part.pos_x.write_to(f, Self::BYTE_ORDER)?;
                 part.pos_y.write_to(f, Self::BYTE_ORDER)?;
@@ -358,90 +434,5 @@ impl BRCAD {
             }
         }
         Ok(())
-    }
-}
-
-/// Implementation for AnimationStep pos_x and pos_y serialization in flour 2.1+
-///
-mod pos_xy {
-    use super::AnimationStep;
-    use serde::{
-        de::{Error, SeqAccess, Unexpected, Visitor},
-        ser::SerializeSeq,
-    };
-
-    struct PosXYVisitor;
-
-    impl<'de> Visitor<'de> for PosXYVisitor {
-        type Value = u32;
-
-        fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
-            write!(
-                formatter,
-                "a sequence of two 16-bit signed integers or one 32-bit integer"
-            )
-        }
-
-        // 1.0 - 2.0 behavior
-
-        fn visit_u32<E>(self, v: u32) -> Result<Self::Value, E> {
-            Ok(v)
-        }
-
-        fn visit_i32<E>(self, v: i32) -> Result<Self::Value, E> {
-            Ok(v as u32)
-        }
-
-        fn visit_u64<E: Error>(self, v: u64) -> Result<Self::Value, E> {
-            let Ok(v) = v.try_into() else {
-                Err(E::invalid_type(
-                    Unexpected::Unsigned(v),
-                    &"a 32-bit integer",
-                ))?
-            };
-            self.visit_u32(v)
-        }
-
-        fn visit_i64<E: Error>(self, v: i64) -> Result<Self::Value, E> {
-            let Ok(v) = v.try_into() else {
-                Err(E::invalid_type(Unexpected::Signed(v), &"a 32-bit integer"))?
-            };
-            self.visit_i32(v)
-        }
-
-        // 2.1+ behavior
-
-        fn visit_seq<A: SeqAccess<'de>>(self, mut seq: A) -> Result<Self::Value, A::Error> {
-            let mut out = 0u32;
-
-            let Some(pos_x) = seq.next_element::<i16>()? else {
-                Err(A::Error::invalid_length(0, &"2"))?
-            };
-            let Some(pos_y) = seq.next_element::<i16>()? else {
-                Err(A::Error::invalid_length(1, &"2"))?
-            };
-
-            // this way we can catch some errors where there's too many values
-            if let Some(size) = seq.size_hint() {
-                if size != 2 {
-                    Err(A::Error::invalid_length(size + 2, &"2"))?;
-                }
-            }
-
-            *AnimationStep::get_pos_mut(&mut out, false) = pos_x;
-            *AnimationStep::get_pos_mut(&mut out, true) = pos_y;
-            Ok(out)
-        }
-    }
-
-    pub fn serialize<S: serde::Serializer>(value: &u32, serializer: S) -> Result<S::Ok, S::Error> {
-        let mut seq = serializer.serialize_seq(Some(2))?;
-        seq.serialize_element(&AnimationStep::get_pos(value, false))?;
-        seq.serialize_element(&AnimationStep::get_pos(value, true))?;
-        seq.end()
-    }
-
-    pub fn deserialize<'de, D: serde::Deserializer<'de>>(deserializer: D) -> Result<u32, D::Error> {
-        Ok(deserializer.deserialize_any(PosXYVisitor).unwrap())
     }
 }
