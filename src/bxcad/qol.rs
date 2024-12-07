@@ -102,6 +102,7 @@ impl Indexizable for brcad::BRCAD {
 
         IndexizedBRCAD {
             timestamp: self.timestamp,
+            #[allow(deprecated)]
             unk0: self.unk0,
             spritesheet_num: self.spritesheet_num,
             spritesheet_control: self.spritesheet_control,
@@ -128,6 +129,7 @@ impl Indexizable for brcad::BRCAD {
             sprites.push(sprite);
         }
 
+        #[allow(deprecated)]
         Self {
             timestamp: og.timestamp,
             unk0: og.unk0,
