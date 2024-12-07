@@ -1,5 +1,8 @@
 use crate::{
-    bxcad::{BXCADType, PosInTexture, BXCAD},
+    bxcad::{
+        serde_impl::{pos_xy, use_variation, variation_num},
+        BXCADType, PosInTexture, BXCAD,
+    },
     bytestream_addon::ByteStream,
     error::{Error, Result},
 };
@@ -14,6 +17,10 @@ pub struct BRCAD {
     /// Date of latest format revision, in YYYYMMDD format (decimal).
     /// Known timestamp is 20100312 (Mar 12 2010)
     pub timestamp: Option<u32>,
+    /// Boolean value that tests whether or not the associated texture sheet has variations.
+    /// Use [`has_variations`] or [`has_variations_mut`] instead
+    #[deprecated(since = "2.1.0", note = "use has_variations instead")]
+    #[serde(rename = "has_variations", alias = "unk0", with = "use_variation")]
     pub unk0: u32,
     /// Number of the spritesheet to use in a specific
     pub spritesheet_num: u16,
@@ -23,12 +30,44 @@ pub struct BRCAD {
     pub texture_width: u16,
     /// Height of the associated texture in pixels
     pub texture_height: u16,
+    /// Padding
     pub unk1: u16,
     /// [`Sprite`]s this BRCAD contains
     pub sprites: Vec<Sprite>,
+    /// Padding
     pub unk2: u16,
     /// [`Animation`]s that can be called for this BRCAD
     pub animations: Vec<Animation>,
+}
+
+impl BRCAD {
+    /// Get whether or not associated texture sheet has variations, like in Flock Step
+    ///
+    /// If true, textures must be paletted; if false, textures must not be paletted. For Flock Step's birds,
+    /// this value is overwritten by the game
+    #[allow(deprecated)]
+    pub fn has_variations(&self) -> bool {
+        if cfg!(target_endian = "big") {
+            self.unk0 as u8 == 0
+        } else {
+            (self.unk0 >> 24) as u8 == 0
+        }
+    }
+
+    /// Get whether or not associated texture sheet has variations, like in Flock Step (mutable)
+    ///
+    /// If true, textures must be paletted; if false, textures must not be paletted. For Flock Step's birds,
+    /// this value is overwritten by the game
+    pub fn has_variations_mut(&mut self) -> &mut bool {
+        #[allow(deprecated)]
+        let ptr = &mut self.unk0 as *mut u32 as *mut u8 as *mut bool;
+
+        if cfg!(target_endian = "big") {
+            unsafe { &mut *ptr }
+        } else {
+            unsafe { &mut *ptr.add(3) }
+        }
+    }
 }
 
 /// Struct that represents a labels file for a BRCAD file - just a bunch of #defines
@@ -39,6 +78,7 @@ pub struct BRCADLabels(pub Vec<String>);
 /// aligned together to create a full picture
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Sprite {
+    /// Padding
     pub unk: u16,
     /// [`SpritePart`]s that form this Sprite
     pub parts: Vec<SpritePart>,
@@ -50,6 +90,10 @@ pub struct Sprite {
 pub struct SpritePart {
     /// Struct that defines the bounds of the SpritePart in the texture itself
     pub texture_pos: PosInTexture,
+    /// Selects which variation to use.
+    /// Use [`variation_num`] or [`variation_num_mut`] instead
+    #[deprecated(since = "2.1.0", note = "use variation_num instead")]
+    #[serde(rename = "variation_num", alias = "unk", with = "variation_num")]
     pub unk: u32,
     /// X position where the part should be placed relative to the sprite
     pub pos_x: u16,
@@ -69,6 +113,34 @@ pub struct SpritePart {
     pub opacity: u8,
 }
 
+impl SpritePart {
+    /// Effectively selects which variation to use
+    ///
+    /// If variations are enabled in this BRCAD, this is added to the BRCAD's texture atlas index for this part only
+    #[allow(deprecated)]
+    pub fn variation_num(&self) -> u16 {
+        if cfg!(target_endian = "big") {
+            self.unk as u16
+        } else {
+            (self.unk >> 16) as u16
+        }
+    }
+
+    /// Effectively selects which variation to use (mutable)
+    ///
+    /// If variations are enabled in this BRCAD, this is added to the BRCAD's texture atlas index for this part only
+    pub fn variation_num_mut(&mut self) -> &mut u16 {
+        #[allow(deprecated)]
+        let ptr = &mut self.unk as *mut u32 as *mut u16;
+
+        if cfg!(target_endian = "big") {
+            unsafe { &mut *ptr }
+        } else {
+            unsafe { &mut *ptr.add(1) }
+        }
+    }
+}
+
 /// A cell animation for BRCAD, composed of different frames/[`Sprite`]s
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Animation {
@@ -77,6 +149,7 @@ pub struct Animation {
     /// the order of the animations, the name is just there for development
     /// purposes**
     pub name: Option<String>,
+    /// Padding
     pub unk: u16,
     /// List of [`AnimationStep`]s that constitute this Animation
     pub steps: Vec<AnimationStep>,
@@ -87,10 +160,14 @@ pub struct Animation {
 /// whole animation
 #[derive(Serialize, Deserialize, Clone)]
 pub struct AnimationStep {
-    /// A reference to the index number of the [`Sprite`] this AnimationStep uses
+    /// A reference to the index number of the [Sprite] this AnimationStep uses
     pub sprite: u16,
-    /// Duration of the frame (in unknown units, seems to have changeable speed)
+    /// Duration of the step (FPS is variable)
     pub duration: u16,
+    /// Turns out this is actually *two* values: the X and Y displacement for the sprite.
+    /// You should instead use [AnimationStep::pos_x] and [AnimationStep::pos_y], or the `_mut` variants
+    #[deprecated(since = "2.1.0", note = "use pos_x and pos_y instead")]
+    #[serde(with = "pos_xy", rename = "pos", alias = "unk0")]
     pub unk0: u32,
     /// Scaling factor for the X axis
     pub scale_x: f32,
@@ -101,6 +178,55 @@ pub struct AnimationStep {
     /// Opacity for the sprite
     pub opacity: u8,
     pub unk1: [u8; 3],
+}
+
+impl AnimationStep {
+    #[doc(hidden)]
+    pub(crate) fn get_pos(unk0: &u32, y: bool) -> i16 {
+        #[allow(deprecated)]
+        let ptr = unk0 as *const u32 as *const i16;
+
+        if (cfg!(target_endian = "big") && y) || (cfg!(target_endian = "little") && !y) {
+            unsafe { *ptr.add(1) }
+        } else {
+            unsafe { *ptr }
+        }
+    }
+
+    #[doc(hidden)]
+    pub(crate) fn get_pos_mut(unk0: &mut u32, y: bool) -> &mut i16 {
+        let ptr = unk0 as *mut u32 as *mut i16;
+
+        if (cfg!(target_endian = "big") && y) || (cfg!(target_endian = "little") && !y) {
+            unsafe { &mut *ptr.add(1) }
+        } else {
+            unsafe { &mut *ptr }
+        }
+    }
+
+    /// Get the X position for this step's sprite
+    pub fn pos_x(&self) -> i16 {
+        #[allow(deprecated)]
+        Self::get_pos(&self.unk0, false)
+    }
+
+    /// Get the Y position for this step's sprite
+    pub fn pos_y(&self) -> i16 {
+        #[allow(deprecated)]
+        Self::get_pos(&self.unk0, true)
+    }
+
+    /// Get the X position for this step's sprite (mutable)
+    pub fn pos_x_mut(&mut self) -> &mut i16 {
+        #[allow(deprecated)]
+        Self::get_pos_mut(&mut self.unk0, false)
+    }
+
+    /// Get the Y position for this step's sprite (mutable)
+    pub fn pos_y_mut(&mut self) -> &mut i16 {
+        #[allow(deprecated)]
+        Self::get_pos_mut(&mut self.unk0, true)
+    }
 }
 
 impl BXCAD for BRCAD {
@@ -139,6 +265,7 @@ impl BXCAD for BRCAD {
                 let flip_y = bool::read_from(f, Self::BYTE_ORDER)?;
                 let opacity = u8::read_from(f, Self::BYTE_ORDER)?;
                 u8::read_from(f, Self::BYTE_ORDER)?; // terminator/padding
+                #[allow(deprecated)]
                 parts.push(SpritePart {
                     texture_pos,
                     unk,
@@ -172,6 +299,7 @@ impl BXCAD for BRCAD {
                 let mut unk1 = [0u8; 3];
                 f.read_exact(&mut unk1)?;
 
+                #[allow(deprecated)]
                 steps.push(AnimationStep {
                     sprite,
                     duration,
@@ -195,6 +323,7 @@ impl BXCAD for BRCAD {
             _ => Some(timestamp),
         };
 
+        #[allow(deprecated)]
         Ok(BRCAD {
             timestamp,
             unk0,
@@ -212,6 +341,7 @@ impl BXCAD for BRCAD {
         self.timestamp
             .unwrap_or(Self::TIMESTAMP)
             .write_to(f, Self::BYTE_ORDER)?;
+        #[allow(deprecated)]
         self.unk0.write_to(f, Self::BYTE_ORDER)?;
         self.spritesheet_num.write_to(f, Self::BYTE_ORDER)?;
         self.spritesheet_control.write_to(f, Self::BYTE_ORDER)?;
@@ -228,6 +358,7 @@ impl BXCAD for BRCAD {
                 part.texture_pos.y.write_to(f, Self::BYTE_ORDER)?;
                 part.texture_pos.width.write_to(f, Self::BYTE_ORDER)?;
                 part.texture_pos.height.write_to(f, Self::BYTE_ORDER)?;
+                #[allow(deprecated)]
                 part.unk.write_to(f, Self::BYTE_ORDER)?;
                 part.pos_x.write_to(f, Self::BYTE_ORDER)?;
                 part.pos_y.write_to(f, Self::BYTE_ORDER)?;
@@ -249,6 +380,7 @@ impl BXCAD for BRCAD {
             for step in &anim.steps {
                 step.sprite.write_to(f, Self::BYTE_ORDER)?;
                 step.duration.write_to(f, Self::BYTE_ORDER)?;
+                #[allow(deprecated)]
                 step.unk0.write_to(f, Self::BYTE_ORDER)?;
                 step.scale_x.write_to(f, Self::BYTE_ORDER)?;
                 step.scale_y.write_to(f, Self::BYTE_ORDER)?;
