@@ -20,7 +20,7 @@ pub struct BRCAD {
     /// Boolean value that tests whether or not the associated texture sheet has variations.
     /// Use [`has_variations`] or [`has_variations_mut`] instead
     #[deprecated(since = "2.1.0", note = "use has_variations instead")]
-    #[serde(rename = "use_variation", alias = "unk0", with = "use_variation")]
+    #[serde(rename = "has_variations", alias = "unk0", with = "use_variation")]
     pub unk0: u32,
     /// Number of the spritesheet to use in a specific
     pub spritesheet_num: u16,
