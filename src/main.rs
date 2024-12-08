@@ -72,6 +72,8 @@ enum Command {
         bxcad: Option<PathBuf>,
     },
     /// Lossy conversion from BRCAD to BCCAD
+    ///
+    /// Data lost: texture sheet number, variation/palette mode, variation numbers
     #[clap(aliases = &["r2c", "brcad2bccad", "brcad-to-bccad", "rcad2ccad"])]
     RcadToCcad {
         /// The BRCAD file to convert
@@ -86,6 +88,25 @@ enum Command {
         /// Adds labels from label file
         #[clap(short, long, parse(from_os_str))]
         labels: Option<PathBuf>,
+    },
+    /// Lossy conversion from BCCAD to BRCAD
+    ///
+    /// Data lost: 3D depth, multiply/screen color overlays, designation IDs, some unknown values
+    #[clap(aliases = &["c2r", "bccad2brcad", "bccad-to-brcad", "ccad2rcad"])]
+    CcadToRcad {
+        /// The BCCAD file to convert
+        bccad: PathBuf,
+        /// Location of the BRCAD file to export (optional)
+        brcad: Option<PathBuf>,
+        /// Set this to not divide the size of the textures by half
+        #[clap(short, long = "no-scale-textures", action = ArgAction::SetFalse)]
+        scale_textures: bool,
+        /// What to prefix the animation names in the labels file with. If unspecified, leaves animation names as they are
+        #[clap(short, long)]
+        label_prefix: Option<String>,
+        /// ID of the texture atlas inside the cellanim's TPL file
+        #[clap(short, long, default_value = "0")]
+        texture_id: u16,
     },
 }
 
@@ -264,6 +285,8 @@ fn main() -> Result<()> {
             if let Some(c) = labels {
                 let mut labels_file = File::open(c)?;
                 brcad_.apply_labels(&mut labels_file)?;
+                //TODO: remove prefix from labels
+                //TODO: warn if no labels
             }
             let bccad_ = flour::conversion::rcad_to_ccad(&brcad_, scale_textures);
 
@@ -276,6 +299,13 @@ fn main() -> Result<()> {
                 bccad.into_os_string()
             );
         }
+        Command::CcadToRcad {
+            bccad,
+            brcad,
+            scale_textures,
+            label_prefix,
+            texture_id,
+        } => todo!(),
     }
     Ok(())
 }

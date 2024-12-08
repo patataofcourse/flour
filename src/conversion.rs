@@ -95,7 +95,7 @@ pub fn rcad_to_ccad(og: &BRCAD, scale_texture: bool) -> BCCAD {
     out
 }
 
-pub fn ccad_to_rcad(og: &BCCAD, scale_texture: bool) -> BRCAD {
+pub fn ccad_to_rcad(og: &BCCAD, scale_texture: bool, texture_id: u16) -> BRCAD {
     #[allow(deprecated)]
     let mut out = BRCAD {
         timestamp: None,
@@ -152,8 +152,9 @@ pub fn ccad_to_rcad(og: &BCCAD, scale_texture: bool) -> BRCAD {
         unk1: 0,
         unk2: 0,
 
-        // TODO: figure out good values for these
-        spritesheet_num: 0,
+        spritesheet_num: texture_id,
+
+        // TODO: figure out good values for this
         spritesheet_control: 0,
 
         // TODO: flock step birds_i will need this set
