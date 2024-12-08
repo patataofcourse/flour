@@ -1,4 +1,4 @@
-use clap::{Parser, Subcommand};
+use clap::{ArgAction, Parser, Subcommand};
 use flour::{
     bxcad::{
         self,
@@ -70,6 +70,22 @@ enum Command {
         /// Location of the B_CAD file to export (optional)
         #[clap(parse(from_os_str))]
         bxcad: Option<PathBuf>,
+    },
+    /// Lossy conversion from BRCAD to BCCAD
+    #[clap(aliases = &["r2c", "brcad2bccad", "brcad-to-bccad", "rcad2ccad"])]
+    RcadToCcad {
+        /// The BRCAD file to convert
+        #[clap(parse(from_os_str))]
+        brcad: PathBuf,
+        /// Location of the BCCAD file to export (optional)
+        #[clap(parse(from_os_str))]
+        bccad: Option<PathBuf>,
+        /// Set this to not divide the size of the textures by half
+        #[clap(short, long = "no-scale-textures", action = ArgAction::SetFalse)]
+        scale_textures: bool,
+        /// Adds labels from label file
+        #[clap(short, long, parse(from_os_str))]
+        labels: Option<PathBuf>,
     },
 }
 
@@ -225,6 +241,39 @@ fn main() -> Result<()> {
                 "Deserialized {:?} to {:?}",
                 json.into_os_string(),
                 bxcad.into_os_string()
+            );
+        }
+        Command::RcadToCcad {
+            brcad,
+            bccad,
+            scale_textures,
+            labels,
+        } => {
+            let bccad = match bccad {
+                Some(c) => c,
+                None => {
+                    let mut p = brcad.clone();
+                    p.set_extension("bccad");
+                    p
+                }
+            };
+
+            let mut in_file = File::open(&brcad)?;
+
+            let mut brcad_ = BRCAD::from_binary(&mut in_file)?;
+            if let Some(c) = labels {
+                let mut labels_file = File::open(c)?;
+                brcad_.apply_labels(&mut labels_file)?;
+            }
+            let bccad_ = flour::conversion::rcad_to_ccad(&brcad_, scale_textures);
+
+            let mut out_file = File::create(&bccad)?;
+            bccad_.to_binary(&mut out_file)?;
+
+            println!(
+                "Converted {:?} to {:?}",
+                brcad.into_os_string(),
+                bccad.into_os_string()
             );
         }
     }

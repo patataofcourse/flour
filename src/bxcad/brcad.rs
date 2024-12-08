@@ -96,8 +96,10 @@ pub struct SpritePart {
     #[serde(rename = "variation_num", alias = "unk", with = "variation_num")]
     pub unk: u32,
     /// X position where the part should be placed relative to the sprite
+    // TODO: signed
     pub pos_x: u16,
     /// Y position where the part should be placed relative to the sprite
+    // TODO: signed
     pub pos_y: u16,
     /// Scaling factor for the X axis
     pub scale_x: f32,
