@@ -44,7 +44,7 @@ jobs:
       run: cargo build --verbose --release --features=clap
     - name: Run tests
       run: cargo test --verbose
-    - uses: actions/upload-artifact@v1
+    - uses: actions/upload-artifact@v4
       with:
         name: flour-mac
         path: ${{runner.workspace}}/flour/target/release/flour
