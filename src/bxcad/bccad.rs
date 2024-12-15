@@ -267,12 +267,12 @@ impl BXCAD for BCCAD {
                 part.opacity.write_to(f, Self::BYTE_ORDER)?;
                 f.write_all(&part.unk1)?;
                 part.designation_id.write_to(f, Self::BYTE_ORDER)?;
-                part.unk2.write_to(f, Self::BYTE_ORDER)?;
+                // i messed around with the ordering so one of these padding bytes is lost forever. rip.
+                (part.unk2 as u16).write_to(f, Self::BYTE_ORDER)?;
                 part.depth.top_left.write_to(f, Self::BYTE_ORDER)?;
                 part.depth.bottom_left.write_to(f, Self::BYTE_ORDER)?;
                 part.depth.top_right.write_to(f, Self::BYTE_ORDER)?;
                 part.depth.bottom_right.write_to(f, Self::BYTE_ORDER)?;
-                0u8.write_to(f, Self::BYTE_ORDER)?; // terminator
             }
         }
 
