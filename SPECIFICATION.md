@@ -55,10 +55,9 @@ Each sprite part has the following structure:
 | RGB color | Screen color       | Color that will be layered to the sprite with the screen blending mode             |
 | u8        | Opacity            | Global opacity for the sprite part                                                 |
 | 12 bytes  | Unknown / reserved | Always 0?                                                                          |
-| u8        | Designation ID     | Used by the game to apply certain properties to it                                 |
-| 1 byte    | Unknown            | Always 0. Padding?                                                                 |
+| u8        | Designation ID     | Used by the game to apply certain properties to specific parts                     |
+| 2 bytes   | Unknown            | Always 0. Padding?                                                                 |
 | f32 * 4   | 3D depth           | For all four corners, in the order: top-left, bottom-left, top-right, bottom-right |
-| 1 byte    | Padding            | Referred to as "terminator" on Bread                                               |
 
 ### Animation:
 
