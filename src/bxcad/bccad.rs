@@ -168,14 +168,14 @@ impl BXCAD for BCCAD {
                 let mut unk1 = [0; 12];
                 f.read_exact(&mut unk1)?;
                 let designation_id = u8::read_from(f, Self::BYTE_ORDER)?;
-                let unk2 = u8::read_from(f, Self::BYTE_ORDER)?;
+                // i messed around with the ordering so one of these padding bytes is lost forever. rip.
+                let unk2 = u16::read_from(f, Self::BYTE_ORDER)? as u8;
                 let depth = StereoDepth {
                     top_left: f32::read_from(f, Self::BYTE_ORDER)?,
                     bottom_left: f32::read_from(f, Self::BYTE_ORDER)?,
                     top_right: f32::read_from(f, Self::BYTE_ORDER)?,
                     bottom_right: f32::read_from(f, Self::BYTE_ORDER)?,
                 };
-                u8::read_from(f, Self::BYTE_ORDER)?; // terminator
                 parts.push(SpritePart {
                     texture_pos,
                     pos_x,
@@ -278,12 +278,12 @@ impl BXCAD for BCCAD {
                 part.opacity.write_to(f, Self::BYTE_ORDER)?;
                 f.write_all(&part.unk1)?;
                 part.designation_id.write_to(f, Self::BYTE_ORDER)?;
-                part.unk2.write_to(f, Self::BYTE_ORDER)?;
+                // i messed around with the ordering so one of these padding bytes is lost forever. rip.
+                (part.unk2 as u16).write_to(f, Self::BYTE_ORDER)?;
                 part.depth.top_left.write_to(f, Self::BYTE_ORDER)?;
                 part.depth.bottom_left.write_to(f, Self::BYTE_ORDER)?;
                 part.depth.top_right.write_to(f, Self::BYTE_ORDER)?;
                 part.depth.bottom_right.write_to(f, Self::BYTE_ORDER)?;
-                0u8.write_to(f, Self::BYTE_ORDER)?; // terminator
             }
         }
 

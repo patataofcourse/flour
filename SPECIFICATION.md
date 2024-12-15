@@ -54,9 +54,8 @@ Each sprite part has the following structure:
 | u8        | Opacity            | The part's opacity                                                                 |
 | 12 bytes  | Unknown / reserved | Always 0?                                                                          |
 | u8        | Designation ID     | Used by the game to apply certain properties to specific parts                     |
-| 1 byte    | Unknown            | Always 0. Padding?                                                                 |
+| 2 bytes   | Unknown            | Always 0. Padding?                                                                 |
 | f32 * 4   | 3D depth           | For all four corners, in the order: top-left, bottom-left, top-right, bottom-right |
-| 1 byte    | Padding            | 8-bit padding. Referred to as "terminator" on Bread                                |
 
 ### Animation:
 
