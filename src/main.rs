@@ -11,6 +11,7 @@ use flour::{
 use json_comments::{CommentSettings, StripComments};
 use serde_json::Value;
 use std::{
+    ffi::OsStr,
     fs::File,
     io::{Read, Write},
     path::PathBuf,
@@ -305,7 +306,49 @@ fn main() -> Result<()> {
             scale_textures,
             label_prefix,
             texture_id,
-        } => todo!(),
+        } => {
+            let brcad = match brcad {
+                Some(c) => c,
+                None => {
+                    let mut p = bccad.clone();
+                    p.set_extension("brcad");
+                    p
+                }
+            };
+            let labels = {
+                let mut out = brcad.clone();
+                out.set_file_name({
+                    let mut fname = out.file_stem().unwrap_or_default().to_os_string();
+                    fname.push(OsStr::new("_labels.h"));
+                    fname
+                });
+                out
+            };
+
+            let mut in_file = File::open(&bccad)?;
+
+            let mut bccad_ = BCCAD::from_binary(&mut in_file)?;
+
+            // adds label prefix
+            if let Some(prefix) = label_prefix {
+                bccad_
+                    .animations
+                    .iter_mut()
+                    .for_each(|c| c.name = prefix.clone() + &c.name)
+            }
+
+            let brcad_ = flour::conversion::ccad_to_rcad(&bccad_, scale_textures, texture_id);
+
+            let mut out_file = File::create(&brcad)?;
+            brcad_.to_binary(&mut out_file)?;
+            //TODO: export labels
+
+            println!(
+                "Converted {:?} to {:?}",
+                bccad.into_os_string(),
+                brcad.into_os_string()
+            );
+        }
     }
     Ok(())
 }
