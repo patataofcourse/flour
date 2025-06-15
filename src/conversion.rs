@@ -179,8 +179,8 @@ pub fn ccad_to_rcad(og: &BCCAD, scale_texture: bool, texture_id: u16) -> BRCAD {
                 part.texture_pos.width *= 2;
                 part.texture_pos.height *= 2;
 
-                part.pos_x = (part.pos_x - 512) * 2 + 512;
-                part.pos_y = (part.pos_y - 512) * 2 + 512;
+                part.pos_x = ((part.pos_x as i16 - 512) * 2 + 512) as u16;
+                part.pos_y = ((part.pos_y as i16 - 512) * 2 + 512) as u16;
             }
         }
     }
